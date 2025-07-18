@@ -28,10 +28,11 @@
     "web": {
       "favicon": "./assets/bride.png"
     },
-    "extra": {
-      "eas": {
-        "projectId": "cdec4695-4af3-4ada-81b8-38ae6984cbee"
-      }
-    }
+   "extra": {
+  "eas": {
+    "projectId": "6ee74de8-15f1-493e-acfd-4729520bd5ba"
+  }
+}
+
   }
 }
