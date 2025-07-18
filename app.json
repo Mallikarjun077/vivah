@@ -1,14 +1,14 @@
 {
   "expo": {
-    "name": "Matrimony",
-    "slug": "Matrimony",
+    "name": "Nekar Vivah Vedike",
+    "slug": "nekarvivahvedike",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "../Matrimony/assets/bride.webp",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "../Matrimony/assets/bride.webp",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,14 +16,21 @@
       "supportsTablet": true
     },
     "android": {
+      "hermesEnabled": true,
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "../Matrimony/assets/bride.webp",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "edgeToEdgeEnabled": true,
+      "package": "com.mallikarjunshirwal.nekarvivahvedike"
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "../Matrimony/assets/bride.webp"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "cdec4695-4af3-4ada-81b8-38ae6984cbee"
+      }
     }
   }
 }
