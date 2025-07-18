@@ -14,7 +14,10 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mallikarjunshirwal.nekarvivahvedike"
+      "bundleIdentifier": "com.mallikarjunshirwal.nekarvivahvedike",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "hermesEnabled": true,
@@ -28,11 +31,10 @@
     "web": {
       "favicon": "./assets/bride.png"
     },
-   "extra": {
-  "eas": {
-    "projectId": "6ee74de8-15f1-493e-acfd-4729520bd5ba"
-  }
-}
-
+    "extra": {
+      "eas": {
+        "projectId": "6ee74de8-15f1-493e-acfd-4729520bd5ba"
+      }
+    }
   }
 }
