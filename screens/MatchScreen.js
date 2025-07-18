@@ -215,7 +215,7 @@ useEffect(() => {
   source={
     profile.image
       ? { uri: profile.image }
-      : require("../assets/men2.png") // fallback if image is missing
+      : require("../assets/men.png") // fallback if image is missing
   }
   style={styles.profileImage}
 />
