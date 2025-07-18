@@ -58,7 +58,7 @@ const ProfileScreen = () => {
   const [fullScreenPhotoUri, setFullScreenPhotoUri] = useState(null);
 
   const [profilePhoto, setProfilePhoto] = useState(
-    require("../assets/men1.png")
+    require("../assets/men.png")
   );
   const [surname, setSurname] = useState("");
   const [photos, setPhotos] = useState([]);

@@ -4,11 +4,11 @@
     "slug": "nekarvivahvedike",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "../Matrimony/assets/bride.webp",
+    "icon": "./assets/bride.png",
     "userInterfaceStyle": "light",
     "newArchEnabled": false,
     "splash": {
-      "image": "../Matrimony/assets/bride.webp",
+      "image": "./assets/bride.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -19,14 +19,14 @@
     "android": {
       "hermesEnabled": true,
       "adaptiveIcon": {
-        "foregroundImage": "../Matrimony/assets/bride.webp",
+        "foregroundImage": "./assets/bride.png",
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
       "package": "com.mallikarjunshirwal.nekarvivahvedike"
     },
     "web": {
-      "favicon": "../Matrimony/assets/bride.webp"
+      "favicon": "./assets/bride.png"
     },
     "extra": {
       "eas": {
