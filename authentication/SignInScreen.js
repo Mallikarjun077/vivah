@@ -78,7 +78,7 @@ const SignInScreen = ({ navigation }) => {
               Don't have an account?{' '}
               <Text
                 style={styles.signupLink}
-                onPress={() => navigation.navigate('PersonalDetails')}
+                onPress={() => navigation.navigate('Home')}
               >
                 Sign Up
               </Text>
