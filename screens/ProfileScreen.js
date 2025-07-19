@@ -272,7 +272,7 @@ if (data.image || data.image_path) {
   source={
     profilePhoto
       ? profilePhoto
-      : require("../assets/men2.png")
+      : require("../assets/men.png")
   }
   style={styles.profileImage}
 />
