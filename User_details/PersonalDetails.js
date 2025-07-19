@@ -181,7 +181,7 @@ export default function ProfileForm({ navigation }) {
         image_base64: profilePhoto.base64
       };
 
-      const response = await fetch("http://192.168.236.102:8081/api/profile/", {
+      const response = await fetch("https://backend-1-hccr.onrender.com/api/profile/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

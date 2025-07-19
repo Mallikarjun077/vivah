@@ -9,7 +9,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const API_URL = 'http://192.168.236.102:8081/api'; 
+  const API_URL = 'https://backend-1-hccr.onrender.com/api'; 
 
   useEffect(() => {
     const loadUser = async () => {

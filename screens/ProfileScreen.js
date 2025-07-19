@@ -16,7 +16,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome5 } from "@expo/vector-icons";
 
-const API_URL = "http://192.168.236.102:8000/api/profile/"; // <-- FastAPI base URL
+const API_URL = "https://backend-1-hccr.onrender.com/api/profile/"; // <-- FastAPI base URL
 
 const getProfile = async () => {
   const storedUser = await AsyncStorage.getItem("user");
@@ -30,7 +30,7 @@ const getProfile = async () => {
     return null;
   }
 
-  const res = await fetch("http://192.168.236.102:8081/api/profile/", {
+  const res = await fetch("https://backend-1-hccr.onrender.com/api/profile/", {
     method: "GET", // ✅ RESTful method
     headers: {
       Authorization: `Bearer ${token}`,

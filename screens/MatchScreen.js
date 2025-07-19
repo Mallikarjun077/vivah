@@ -60,7 +60,7 @@ const { user } = useContext(AuthContext); // ✅ This must be inside the compone
 useEffect(() => {
   const fetchProfiles = async () => {
     try {
-      const response = await fetch("http://192.168.236.102:8081/api/all-profiles/", {
+      const response = await fetch("https://backend-1-hccr.onrender.com/api/all-profiles/", {
         headers: {
           Authorization: `Bearer ${user?.access}`,
         },
