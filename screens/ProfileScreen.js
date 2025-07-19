@@ -16,7 +16,7 @@ import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
 import { FontAwesome5 } from "@expo/vector-icons";
 
-const API_URL = "https://backend-1-hccr.onrender.com/api/profile/"; // <-- FastAPI base URL
+const API_URL = "https://backend-1-hccr.onrender.com/api/profile/"; 
 
 const getProfile = async () => {
   const storedUser = await AsyncStorage.getItem("user");
