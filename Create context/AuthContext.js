@@ -8,6 +8,23 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const isValidEmail = (email) => {
+  // Allows all valid email formats
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return email.length >= 4 && emailRegex.test(email);
+};
+
+const isValidPassword = (password) => {
+  // At least 8 characters, includes upper, lower, number, special char
+  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
+  return passwordRegex.test(password);
+};
+const isValidUsername = (username) => {
+  // At least 3 characters, letters, numbers, underscores allowed
+  const usernameRegex = /^[a-zA-Z0-9_]{3,}$/;
+  return usernameRegex.test(username);
+};
+
 
   const API_URL = 'https://backend-1-hccr.onrender.com/api'; 
 
@@ -41,6 +58,19 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (email, username, password) => {
+     if (!isValidEmail(email)) {
+    alert('❌ Please enter a valid email with at least 8 characters.');
+    return false;
+  }
+
+  if (!isValidPassword(password)) {
+    alert('❌ Password must be at least 8 characters.');
+    return false;
+  }
+  if(!isValidUsername(username)) {
+    alert('❌ Username must be at least 3 characters and can only contain letters, numbers, and underscores.');
+    return false;
+  }
     try {
       const res = await fetch(`${API_URL}/register/`, {
         method: 'POST',
@@ -64,6 +94,15 @@ export const AuthProvider = ({ children }) => {
   };
 
  const login = async (email, password) => {
+   if (!isValidEmail(email)) {
+    alert('❌ Please enter a valid email with at least 8 characters.');
+    return false;
+  }
+
+  if (!isValidPassword(password)) {
+    alert('❌ Password must be at least 8 characters.');
+    return false;
+  }
   try {
     const res = await fetch(`${API_URL}/login/`, {
       method: 'POST',

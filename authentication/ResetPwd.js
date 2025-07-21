@@ -18,11 +18,7 @@ const ResetPwd = ({ navigation }) => {
             navigation.navigate('OtpPwd');
 
 
-    // //  TEMPORARY dev navigation (optional)
-    // navigation.navigate('NewPwdScreen', {
-    //   uidb64: 'NTY',
-    //   token: '2cdbe9be4aaf73efb59d37d065bd5488',
-    // });
+   
       
     } else {
       Alert.alert('Error', 'Email not found or failed to send reset link.');

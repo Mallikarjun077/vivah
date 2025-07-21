@@ -58,7 +58,8 @@ const profile = route?.params?.profile; // Expect one profile object
  <Image
   source={
     profile?.image
-      ? { uri: profile.image }
+      ? { uri: `data:image/jpeg;base64,${profile.image}` }
+
       : require("../assets/women.png") // fallback image
   }
   style={styles.topImage}

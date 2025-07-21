@@ -77,20 +77,23 @@ useEffect(() => {
   fetchProfiles();
 }, []);
 
-  const filteredProfiles = profiles.filter((profile) => {
-    const matchName = profile.name
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase());
-    const matchAge = selectedGender ? profile.age === selectedGender : true;
-    const matchReligion = selectedReligion
-      ? profile.religion === selectedReligion
-      : true;
-    const matchLocation = selectedLocation
-      ? profile.location === selectedLocation
-      : true;
+const filteredProfiles = Array.isArray(profiles)
+  ? profiles.filter((profile) => {
+      const matchName = profile.name
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+      const matchAge = selectedGender ? profile.age === selectedGender : true;
+      const matchReligion = selectedReligion
+        ? profile.religion === selectedReligion
+        : true;
+      const matchLocation = selectedLocation
+        ? profile.location === selectedLocation
+        : true;
 
-    return matchName && matchAge && matchReligion && matchLocation;
-  });
+      return matchName && matchAge && matchReligion && matchLocation;
+    })
+  : [];
+
 
   return (
     <View style={styles.container}>
@@ -98,6 +101,8 @@ useEffect(() => {
       <View style={styles.searchContainer}>
         <Ionicons name="search" size={22} color="#9C854A" />
         <TextInput
+          label={"Search by name or ID"}
+          mode="outlined"
           placeholder="Search by name or ID"
           placeholderTextColor="#9C854A"
           style={styles.searchBar}
@@ -214,7 +219,7 @@ useEffect(() => {
 <Image
   source={
     profile.image
-      ? { uri: profile.image }
+      ? { uri: `data:image/jpeg;base64,${profile.image}` }
       : require("../assets/men.png") // fallback if image is missing
   }
   style={styles.profileImage}

@@ -48,32 +48,33 @@ useEffect(() => {
         <Text style={styles.head}>Featured Profiles</Text>
 
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-          {profiles.map((item, index) => (
-            <TouchableOpacity
-              key={index}
-              onPress={() => navigation.navigate("Partner", { profile: item })}
-            >
-              <View style={styles.profileCard}>
-<Image
-  source={
-    item.image && item.image !== ""
-      ? { uri: item.image }
-      : require("../assets/men.png") // ✅ Your fallback image
-  }
-  style={styles.image}
-/>
+        {Array.isArray(profiles) &&
+  profiles.map((item, index) => (
+    <TouchableOpacity
+      key={index}
+      onPress={() => navigation.navigate("Partner", { profile: item })}
+    >
+      <View style={styles.profileCard}>
+        <Image
+          source={
+            item.image && item.image !== ""
+              ? { uri: `data:image/jpeg;base64,${item.image}` }
+              : require("../assets/men.png")
+          }
+          style={styles.image}
+        />
+        <Text style={styles.name}>{item.name}</Text>
+        <Text style={styles.profession}>{item.profession}</Text>
+      </View>
+    </TouchableOpacity>
+  ))}
 
-                <Text style={styles.name}>{item.name}</Text>
-                <Text style={styles.profession}>{item.profession}</Text>
-              </View>
-            </TouchableOpacity>
-          ))}
         </ScrollView>
 
         <Text style={styles.head}>Quick Match</Text>
 
         <FlatList
-          data={profiles} // ✅ Changed from ImageData to profiles
+          data={profiles} 
           renderItem={({ item }) => (
             <TouchableOpacity
               onPress={() => navigation.navigate("Partner", { profile: item })}
@@ -82,7 +83,7 @@ useEffect(() => {
 <Image
   source={
     item.image && item.image !== ""
-      ? { uri: item.image }
+      ? { uri: `data:image/jpeg;base64,${item.image}` }
       : require("../assets/men.png") // ✅ Your fallback image
   }
   style={styles.image}

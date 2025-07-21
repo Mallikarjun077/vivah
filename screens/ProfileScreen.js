@@ -262,6 +262,19 @@ if (data.image || data.image_path) {
     // profile_photo: profilePhoto?.uri,
     // photos: photos.map((p) => p.uri),
   ]);
+  const pickImage = async () => {
+  const result = await ImagePicker.launchImageLibraryAsync({
+    mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    allowsEditing: true,
+    base64: true,
+    quality: 1,
+  });
+
+  if (!result.canceled && result.assets?.length > 0) {
+    const selectedImage = result.assets[0];
+    setPhotos((prev) => [...prev, { uri: selectedImage.uri }]);
+  }
+};
 
   return (
     <View style={styles.container}>
@@ -401,65 +414,53 @@ if (data.image || data.image_path) {
         </View>
         <FlatList
           horizontal
-          data={photos}
-          renderItem={({ item, index }) => (
-            <View style={styles.photoItemWrapper}>
-              <TouchableOpacity onPress={() => setFullScreenPhotoUri(item.uri)}>
-                <Image source={{ uri: item.uri }} style={styles.photoItem} />
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.deleteIcon}
-                onPress={() => {
-                  Alert.alert(
-                    "Delete Photo",
-                    "Are you sure you want to delete this photo?",
-                    [
-                      { text: "Cancel", style: "cancel" },
-                      {
-                        text: "Delete",
-                        style: "destructive",
-                        onPress: () => {
-                          setPhotos((prev) =>
-                            prev.filter((_, i) => i !== index)
-                          );
-                          if (fullScreenPhotoUri === item.uri)
-                            setFullScreenPhotoUri(null);
-                        },
-                      },
-                    ]
-                  );
-                }}
-              >
-                <Ionicons name="trash" size={22} color="#1C170D" />
-              </TouchableOpacity>
-            </View>
-          )}
-          keyExtractor={(item, index) => index.toString()}
-          showsHorizontalScrollIndicator={false}
-          ListFooterComponent={
-            <TouchableOpacity
-              style={styles.addPhotoButton}
-              onPress={() => pickImage(false)}
-            >
-              <Ionicons name="add" size={30} color="#9C854A" />
-            </TouchableOpacity>
-          }
-        />
+          data={[...photos, { id: "add_button", isAddButton: true }]}
 
-        {fullScreenPhotoUri && (
-          <View style={styles.fullScreenOverlay}>
-            <TouchableOpacity
-              style={styles.closeButton}
-              onPress={() => setFullScreenPhotoUri(null)}
-            >
-              <Ionicons name="close" size={30} color="#fff" />
-            </TouchableOpacity>
-            <Image
-              source={{ uri: profilePhoto }}
-              style={styles.profilePhoto}
-            />
-          </View>
-        )}
+          renderItem={({ item, index }) => {
+  if (item.isAddButton) {
+    return (
+      <TouchableOpacity
+        style={styles.addPhotoButton}
+        onPress={() => pickImage(false)}
+      >
+        <Ionicons name="add" size={30} color="#9C854A" />
+      </TouchableOpacity>
+    );
+  }
+
+  return (
+    <View style={styles.photoItemWrapper}>
+      <TouchableOpacity onPress={() => setFullScreenPhotoUri(item.uri)}>
+        <Image source={{ uri: item.uri }} style={styles.photoItem} />
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.deleteIcon}
+        onPress={() => {
+          Alert.alert(
+            "Delete Photo",
+            "Are you sure you want to delete this photo?",
+            [
+              { text: "Cancel", style: "cancel" },
+              {
+                text: "Delete",
+                style: "destructive",
+                onPress: () => {
+                  setPhotos((prev) => prev.filter((_, i) => i !== index));
+                  if (fullScreenPhotoUri === item.uri) {
+                    setFullScreenPhotoUri(null);
+                  }
+                },
+              },
+            ]
+          );
+        }}
+      >
+        <Ionicons name="trash" size={22} color="#1C170D" />
+      </TouchableOpacity>
+    </View>
+  );
+}}
+/>
 
         {/* <Text style={styles.head}>Details</Text> */}
 
@@ -893,6 +894,8 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
+ 
+
   separatorContainer: {
     flexDirection: "row",
     justifyContent: "center",

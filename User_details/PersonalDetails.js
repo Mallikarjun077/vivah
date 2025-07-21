@@ -1,32 +1,30 @@
+import React, { useState, useContext } from "react";
 import {
   View,
-  Text,
-  TextInput,
   ScrollView,
-  Alert,
-  TouchableOpacity,
   StyleSheet,
+  TouchableOpacity,
   Image,
+  Alert,
   KeyboardAvoidingView,
   Platform,
+  ActivityIndicator,
   TouchableWithoutFeedback,
   Keyboard,
-  ActivityIndicator
 } from "react-native";
-import { useState, useContext } from "react";
+import { TextInput, Text, Button, HelperText } from "react-native-paper";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
+import * as ImageManipulator from "expo-image-manipulator";
+import RNPickerSelect from "react-native-picker-select";
 import { Ionicons } from "@expo/vector-icons";
 import { AuthContext } from "../Create context/AuthContext";
-import * as ImageManipulator from 'expo-image-manipulator';
 
-
-// Validation helper functions
 const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 const validateMobile = (mobile) => /^[0-9]{10}$/.test(mobile);
 const validateRequired = (value) => value && value.trim().length > 0;
 const validateAge = (age) => age >= 18 && age <= 120;
-const validateHeight = (height) => height >= 100 && height <= 250; // in cm
+const validateHeight = (height) => height >= 100 && height <= 250;
 
 export default function ProfileForm({ navigation }) {
   const { user } = useContext(AuthContext);
@@ -34,10 +32,9 @@ export default function ProfileForm({ navigation }) {
   const [errors, setErrors] = useState({});
   const [profilePhoto, setProfilePhoto] = useState({
     uri: "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png",
-    base64: null
+    base64: null,
   });
 
-  // Form state
   const [form, setForm] = useState({
     name: "",
     surname: "",
@@ -71,24 +68,16 @@ export default function ProfileForm({ navigation }) {
     ancestralOrigin: "",
     mobile: "",
     socialMedia: "",
-    dob: ""
+    dob: "",
   });
 
-  // Handle form field changes
   const handleChange = (field, value) => {
-    setForm({ ...form, [field]: value });
-    
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: null }));
-    }
+    setForm((prev) => ({ ...prev, [field]: value }));
+    if (errors[field]) setErrors((prev) => ({ ...prev, [field]: null }));
   };
 
-  // Validate all fields
   const validateForm = () => {
     const newErrors = {};
-    
-    // Required fields
     if (!validateRequired(form.name)) newErrors.name = "Name is required";
     if (!validateRequired(form.surname)) newErrors.surname = "Surname is required";
     if (!validateRequired(form.mobile)) {
@@ -96,91 +85,62 @@ export default function ProfileForm({ navigation }) {
     } else if (!validateMobile(form.mobile)) {
       newErrors.mobile = "Invalid mobile number";
     }
-    
-    // Numeric validations
-    if (form.age && !validateAge(Number(form.age))) {
-      newErrors.age = "Age must be between 18-120";
-    }
-    if (form.height && !validateHeight(Number(form.height))) {
-      newErrors.height = "Height must be between 100-250 cm";
-    }
-    
-    // Image validation
-    if (!profilePhoto.base64) {
-      newErrors.profilePhoto = "Profile photo is required";
-    }
-    
+    if (form.age && !validateAge(Number(form.age))) newErrors.age = "Age must be 18-120";
+    if (form.height && !validateHeight(Number(form.height))) newErrors.height = "Height must be 100-250cm";
+    if (!profilePhoto.base64) newErrors.profilePhoto = "Profile photo is required";
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  // Optimized image compression and base64 conversion
   const processImage = async (uri) => {
     try {
-        // Get image info
-        const fileInfo = await FileSystem.getInfoAsync(uri);
-
-        // Compress if image is too large (> 1MB)
-        let compressedUri = uri;
-        if (fileInfo.size > 1000000) {
-            const manipResult = await ImageManipulator.manipulateAsync(uri, [], {
-                compress: 0.7,
-                format: ImageManipulator.SaveFormat.JPEG,
-            });
-            compressedUri = manipResult.uri;
-        }
-
-        // Read as base64
-        const base64 = await FileSystem.readAsStringAsync(compressedUri, {
-            encoding: FileSystem.EncodingType.Base64
+      const fileInfo = await FileSystem.getInfoAsync(uri);
+      let compressedUri = uri;
+      if (fileInfo.size > 1000000) {
+        const result = await ImageManipulator.manipulateAsync(uri, [], {
+          compress: 0.7,
+          format: ImageManipulator.SaveFormat.JPEG,
         });
-
-        return base64;
+        compressedUri = result.uri;
+      }
+      const base64 = await FileSystem.readAsStringAsync(compressedUri, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      return base64;
     } catch (error) {
-        console.error("Image processing error:", error);
-        throw error;
+      console.error("Image processing error:", error);
+      throw error;
     }
-};
+  };
 
   const pickImage = async () => {
     try {
-        const result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            allowsEditing: true,
-            aspect: [1, 1],
-            quality: 0.8,
-            base64: true
-        });
-
-        if (!result.canceled) {
-            const uri = result.assets[0].uri;
-            const base64 = await processImage(uri);
-
-            setProfilePhoto({
-                uri,
-                base64
-            });
-
-            // Clear any previous image error
-            setErrors(prev => ({ ...prev, profilePhoto: null }));
-        }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsEditing: true,
+        aspect: [1, 1],
+        quality: 0.8,
+      });
+      if (!result.canceled) {
+        const uri = result.assets[0].uri;
+        const base64 = await processImage(uri);
+        setProfilePhoto({ uri, base64 });
+        setErrors((prev) => ({ ...prev, profilePhoto: null }));
+      }
     } catch (error) {
-        Alert.alert("Error", "Failed to process image");
-        console.error(error);
+      Alert.alert("Error", "Failed to select image");
     }
-};
+  };
+
   const handleSave = async () => {
     if (!validateForm()) return;
-    
     setIsLoading(true);
-    
     try {
       const profileData = {
         email: user?.email,
         ...form,
-        image_base64: profilePhoto.base64
+        image_base64: profilePhoto.base64,
       };
-
       const response = await fetch("https://backend-1-hccr.onrender.com/api/profile/", {
         method: "POST",
         headers: {
@@ -189,9 +149,7 @@ export default function ProfileForm({ navigation }) {
         },
         body: JSON.stringify(profileData),
       });
-
       const data = await response.json();
-      
       if (response.ok) {
         Alert.alert("Success", "Profile saved successfully");
         navigation.navigate("Home");
@@ -206,169 +164,191 @@ export default function ProfileForm({ navigation }) {
     }
   };
 
+
+  
   return (
-    <KeyboardAvoidingView
-      behavior={Platform.OS === "ios" ? "padding" : "height"}
-      style={styles.container}
-    >
-      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView contentContainerStyle={styles.scrollContainer}>
-          <Text style={styles.title}>Your Profile Details:</Text>
+  <KeyboardAvoidingView
+    behavior={Platform.OS === "ios" ? "padding" : "height"}
+    style={styles.container}
+  >
+    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+      <ScrollView contentContainerStyle={styles.scrollContainer}>
+        <Text style={styles.title}>Your Profile Details</Text>
 
-          <View style={styles.imageContainer}>
-            <Image
-              source={{ uri: profilePhoto.uri }}
-              style={styles.profileImage}
-            />
-            <TouchableOpacity onPress={pickImage} style={styles.cameraButton}>
-              <Ionicons name="camera" size={24} color="white" />
-            </TouchableOpacity>
-            {errors.profilePhoto && (
-              <Text style={styles.errorText}>{errors.profilePhoto}</Text>
-            )}
-          </View>
-
-          {/* Required Fields */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Basic Information</Text>
-            <TextInput
-              placeholder="Name *"
-              value={form.name}
-              onChangeText={(val) => handleChange("name", val)}
-              style={[styles.input, errors.name && styles.errorInput]}
-            />
-            {errors.name && <Text style={styles.errorText}>{errors.name}</Text>}
-
-            <TextInput
-              placeholder="Surname *"
-              value={form.surname}
-              onChangeText={(val) => handleChange("surname", val)}
-              style={[styles.input, errors.surname && styles.errorInput]}
-            />
-            {errors.surname && <Text style={styles.errorText}>{errors.surname}</Text>}
-
-            <TextInput
-              placeholder="Mobile *"
-              value={form.mobile}
-              onChangeText={(val) => handleChange("mobile", val)}
-              keyboardType="phone-pad"
-              style={[styles.input, errors.mobile && styles.errorInput]}
-            />
-            {errors.mobile && <Text style={styles.errorText}>{errors.mobile}</Text>}
-          </View>
-
-          {/* Other Fields */}
-          <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Personal Details</Text>
-            <TextInput
-              placeholder="Age"
-              value={form.age}
-              onChangeText={(val) => handleChange("age", val)}
-              keyboardType="numeric"
-              style={[styles.input, errors.age && styles.errorInput]}
-            />
-            {errors.age && <Text style={styles.errorText}>{errors.age}</Text>}
-
-            <TextInput
-              placeholder="Height (cm)"
-              value={form.height}
-              onChangeText={(val) => handleChange("height", val)}
-              keyboardType="numeric"
-              style={[styles.input, errors.height && styles.errorInput]}
-            />
-            {errors.height && <Text style={styles.errorText}>{errors.height}</Text>}
-            
-            {/* Add other fields similarly */}
-          </View>
-
-          <TouchableOpacity 
-            style={styles.button} 
-            onPress={handleSave}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.buttonText}>Submit</Text>
-            )}
+        <View style={styles.imageContainer}>
+          <Image source={{ uri: profilePhoto.uri }} style={styles.profileImage} />
+          <TouchableOpacity onPress={pickImage} style={styles.cameraButton}>
+            <Ionicons name="camera" size={24} color="white" />
           </TouchableOpacity>
-        </ScrollView>
-      </TouchableWithoutFeedback>
-    </KeyboardAvoidingView>
-  );
+          {errors.profilePhoto && (
+            <Text style={styles.errorText}>{errors.profilePhoto}</Text>
+          )}
+        </View>
+
+        {/* BASIC */}
+        <TextInput
+          label="Name *"
+          value={form.name}
+          onChangeText={(val) => handleChange("name", val)}
+          mode="outlined"
+          style={styles.input}
+          error={!!errors.name}
+        />
+        <HelperText type="error" visible={!!errors.name}>{errors.name}</HelperText>
+
+        <TextInput
+          label="Surname *"
+          value={form.surname}
+          onChangeText={(val) => handleChange("surname", val)}
+          mode="outlined"
+          style={styles.input}
+          error={!!errors.surname}
+        />
+        <HelperText type="error" visible={!!errors.surname}>{errors.surname}</HelperText>
+
+        <TextInput
+          label="Mobile *"
+          value={form.mobile}
+          onChangeText={(val) => handleChange("mobile", val)}
+          keyboardType="phone-pad"
+          mode="outlined"
+          style={styles.input}
+          error={!!errors.mobile}
+        />
+        <HelperText type="error" visible={!!errors.mobile}>{errors.mobile}</HelperText>
+
+        <TextInput
+          label="DOB"
+          value={form.dob}
+          onChangeText={(val) => handleChange("dob", val)}
+          mode="outlined"
+          style={styles.input}
+        />
+
+        <TextInput
+          label="Age"
+          value={form.age}
+          onChangeText={(val) => handleChange("age", val)}
+          keyboardType="numeric"
+          mode="outlined"
+          style={styles.input}
+          error={!!errors.age}
+        />
+        <HelperText type="error" visible={!!errors.age}>{errors.age}</HelperText>
+
+        <TextInput
+          label="Height (cm)"
+          value={form.height}
+          onChangeText={(val) => handleChange("height", val)}
+          keyboardType="numeric"
+          mode="outlined"
+          style={styles.input}
+          error={!!errors.height}
+        />
+        <HelperText type="error" visible={!!errors.height}>{errors.height}</HelperText>
+
+        <TextInput
+          label="About"
+          value={form.about}
+          onChangeText={(val) => handleChange("about", val)}
+          mode="outlined"
+          style={styles.input}
+          multiline
+        />
+
+        {/* DROPDOWNS & TEXT INPUTS */}
+        <TextInput
+          label="Religion"
+          value={form.religion}
+          onChangeText={(val) => handleChange("religion", val)}
+          mode="outlined"
+          style={styles.input}
+        />
+        <TextInput label="Community" value={form.community} onChangeText={(val) => handleChange("community", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Sub-Caste" value={form.subCaste} onChangeText={(val) => handleChange("subCaste", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Gothra" value={form.gothra} onChangeText={(val) => handleChange("gothra", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Dosha" value={form.dosha} onChangeText={(val) => handleChange("dosha", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Star" value={form.star} onChangeText={(val) => handleChange("star", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Rassi" value={form.rassi} onChangeText={(val) => handleChange("rassi", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Horoscope" value={form.horoscope} onChangeText={(val) => handleChange("horoscope", val)} mode="outlined" style={styles.input} />
+
+        <TextInput label="Mother Tongue" value={form.motherTongue} onChangeText={(val) => handleChange("motherTongue", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Marital Status" value={form.maritalStatus} onChangeText={(val) => handleChange("maritalStatus", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Eating Habits" value={form.eatingHabits} onChangeText={(val) => handleChange("eatingHabits", val)} mode="outlined" style={styles.input} />
+
+        <TextInput label="City" value={form.city} onChangeText={(val) => handleChange("city", val)} mode="outlined" style={styles.input} />
+        <TextInput label="State" value={form.state} onChangeText={(val) => handleChange("state", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Country" value={form.country} onChangeText={(val) => handleChange("country", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Ancestral Origin" value={form.ancestralOrigin} onChangeText={(val) => handleChange("ancestralOrigin", val)} mode="outlined" style={styles.input} />
+
+        <TextInput label="Profession" value={form.profession} onChangeText={(val) => handleChange("profession", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Qualification" value={form.qualification} onChangeText={(val) => handleChange("qualification", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Job Sector" value={form.jobSector} onChangeText={(val) => handleChange("jobSector", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Income" value={form.income} onChangeText={(val) => handleChange("income", val)} keyboardType="numeric" mode="outlined" style={styles.input} />
+
+        <TextInput label="Family Status" value={form.familyStatus} onChangeText={(val) => handleChange("familyStatus", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Family Type" value={form.familyType} onChangeText={(val) => handleChange("familyType", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Father Occupation" value={form.fatherOccupation} onChangeText={(val) => handleChange("fatherOccupation", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Mother Occupation" value={form.motherOccupation} onChangeText={(val) => handleChange("motherOccupation", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Brothers" value={form.brothers} onChangeText={(val) => handleChange("brothers", val)} keyboardType="numeric" mode="outlined" style={styles.input} />
+        <TextInput label="Sisters" value={form.sisters} onChangeText={(val) => handleChange("sisters", val)} keyboardType="numeric" mode="outlined" style={styles.input} />
+        <TextInput label="Social Media" value={form.socialMedia} onChangeText={(val) => handleChange("socialMedia", val)} mode="outlined" style={styles.input} />
+
+        <Button
+          mode="contained"
+          onPress={handleSave}
+          disabled={isLoading}
+          style={styles.submitButton}
+        >
+          {isLoading ? "Saving..." : "Submit Profile"}
+        </Button>
+      </ScrollView>
+    </TouchableWithoutFeedback>
+  </KeyboardAvoidingView>
+);
 }
 
-const styles = StyleSheet.create({
+
+ const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: "#fff",
   },
   scrollContainer: {
     padding: 20,
-    paddingBottom: 40,
   },
   title: {
     fontSize: 22,
     fontWeight: "bold",
     marginBottom: 20,
-    color: '#333',
-    textAlign: 'center',
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    color: '#555',
-    marginBottom: 10,
+    textAlign: "center",
   },
   input: {
-    backgroundColor: "#f5f5f5",
-    height: 50,
-    paddingHorizontal: 15,
-    borderRadius: 8,
-    marginBottom: 5,
-    fontSize: 16,
-    borderWidth: 1,
-    borderColor: '#ddd',
-  },
-  errorInput: {
-    borderColor: 'red',
-  },
-  errorText: {
-    color: 'red',
-    fontSize: 12,
     marginBottom: 10,
   },
-  button: {
-    backgroundColor: "#4a90e2",
-    paddingVertical: 15,
-    borderRadius: 8,
-    alignItems: "center",
-    marginTop: 20,
-  },
-  buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
+  errorText: {
+    color: "red",
+    marginBottom: 8,
   },
   imageContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     marginBottom: 20,
   },
   profileImage: {
     width: 120,
     height: 120,
     borderRadius: 60,
-    backgroundColor: "#ddd",
   },
   cameraButton: {
-    position: 'absolute',
-    bottom: 5,
-    right: 95,
-    backgroundColor: '#575858ff',
+    position: "absolute",
+    bottom: 0,
+    right: 100,
+    backgroundColor: "#333",
+    padding: 6,
     borderRadius: 20,
-    padding: 8,
+  },
+  submitButton: {
+    marginTop: 20,
+    paddingVertical: 6,
   },
 });

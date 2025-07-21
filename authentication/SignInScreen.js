@@ -1,8 +1,7 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useContext } from "react";
 import {
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   StyleSheet,
   Alert,
@@ -12,27 +11,29 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   ScrollView,
-} from 'react-native';
-import { AuthContext } from '../Create context/AuthContext';
+} from "react-native";
+import { TextInput } from "react-native-paper";
+
+import { AuthContext } from "../Create context/AuthContext";
 
 const SignInScreen = ({ navigation }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const { login } = useContext(AuthContext);
 
   const handleLogin = async () => {
     const success = await login(email, password);
     if (success) {
-      navigation.navigate('PersonalDetails');
+      navigation.navigate("Home");
     } else {
-      Alert.alert('Login Failed', 'Invalid email or password');
+      Alert.alert("Login Failed", "Invalid email or password");
     }
   };
 
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView
@@ -40,24 +41,31 @@ const SignInScreen = ({ navigation }) => {
           keyboardShouldPersistTaps="handled"
         >
           <View style={styles.container}>
-            <Text style={styles.title}>Welcome To {'\n'}Nekar Vivah Vedike</Text>
+            <Text style={styles.title}>
+              Welcome To {"\n"}Nekar Vivah Vedike
+            </Text>
 
-            <Image source={require('../assets/bride.png')} style={styles.image} />
-
-            <TextInput
-              style={styles.input}
-              placeholder="Email"
-              placeholderTextColor="#9C854A"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
+            <Image
+              source={require("../assets/bride.png")}
+              style={styles.image}
             />
 
             <TextInput
+              label="Email"
+              value={email}
+              onChangeText={setEmail}
+              mode="outlined" // or "flat"
+              keyboardType="email-address"
+              autoCapitalize="none"
+              theme={{ colors: { primary: "#9C854A", outline: "transparent" } }}
               style={styles.input}
-              placeholder="Password"
-              placeholderTextColor="#9C854A"
+            />
+
+            <TextInput
+              label={"Password"}
+              mode="outlined"
+              style={styles.input}
+              theme={{ colors: { primary: "#9C854A", outline: "transparent" } }}
               secureTextEntry
               value={password}
               onChangeText={setPassword}
@@ -65,7 +73,7 @@ const SignInScreen = ({ navigation }) => {
 
             <Text
               style={styles.signupTextPwd}
-              onPress={() => navigation.navigate('ResetPwd')}
+              onPress={() => navigation.navigate("ResetPwd")}
             >
               Forget Password?
             </Text>
@@ -75,10 +83,10 @@ const SignInScreen = ({ navigation }) => {
             </TouchableOpacity>
 
             <Text style={styles.signupText}>
-              Don't have an account?{' '}
+              Don't have an account?{" "}
               <Text
                 style={styles.signupLink}
-                onPress={() => navigation.navigate('SignUp')}
+                onPress={() => navigation.navigate("SignUp")}
               >
                 Sign Up
               </Text>
@@ -93,63 +101,63 @@ const SignInScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   scrollContainer: {
     flexGrow: 1,
-    backgroundColor: '#F2F0E8',
-    justifyContent: 'center',
+    backgroundColor: "#F2F0E8",
+    justifyContent: "center",
     padding: 20,
   },
   container: {
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
   title: {
     fontSize: 30,
     marginBottom: 20,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#9C854A',
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#9C854A",
   },
   image: {
     height: 300,
-    width: '100%',
+    width: "100%",
     marginBottom: 30,
-    resizeMode: 'contain',
+    resizeMode: "contain",
   },
   input: {
     height: 50,
-    borderColor: '#ccc',
+    borderColor: "white",
     marginBottom: 20,
     paddingHorizontal: 15,
     borderRadius: 10,
-    color: 'black',
+    color: "black",
     fontSize: 16,
-    backgroundColor: '#E4DFD1',
+    backgroundColor: "#E4DFD1",
   },
   button: {
-    backgroundColor: '#f7ca36',
+    backgroundColor: "#f7ca36",
     paddingVertical: 14,
     borderRadius: 10,
-    alignItems: 'center',
+    alignItems: "center",
     marginTop: 10,
   },
   buttonText: {
-    color: '#1C170D',
+    color: "#1C170D",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   signupText: {
     marginTop: 20,
-    textAlign: 'center',
-    color: '#9C854A',
+    textAlign: "center",
+    color: "#9C854A",
   },
   signupTextPwd: {
-    color: '#658cf7',
-    fontWeight: 'bold',
-    textAlign: 'right',
+    color: "#658cf7",
+    fontWeight: "bold",
+    textAlign: "right",
     marginBottom: 20,
   },
   signupLink: {
-    color: '#658cf7',
-    fontWeight: 'bold',
+    color: "#658cf7",
+    fontWeight: "bold",
   },
 });
 
