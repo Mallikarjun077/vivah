@@ -8,69 +8,45 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const isValidEmail = (email) => {
-  // Allows all valid email formats
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return email.length >= 4 && emailRegex.test(email);
-};
-
-const isValidPassword = (password) => {
-  // At least 8 characters, includes upper, lower, number, special char
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-  return passwordRegex.test(password);
-};
-const isValidUsername = (username) => {
-  // At least 3 characters, letters, numbers, underscores allowed
-  const usernameRegex = /^[a-zA-Z0-9_]{3,}$/;
-  return usernameRegex.test(username);
-};
-
-
-  const API_URL = 'https://backend-1-hccr.onrender.com/api'; 
+  const API_URL = 'https://backend-1-hccr.onrender.com/api';
 
   useEffect(() => {
     const loadUser = async () => {
       try {
         await Font.loadAsync({ ...Ionicons.font });
-
         const storedUser = await AsyncStorage.getItem('user');
         if (storedUser) {
-          setUser(JSON.parse(storedUser));
+          const parsedUser = JSON.parse(storedUser);
+          console.log("📦 Token loaded from storage:", parsedUser.access);
+          const isValid = await validateToken(parsedUser.access);
+          if (isValid) {
+            setUser(parsedUser);
+          } else {
+            await clearUser();
+          }
         }
       } catch (err) {
-        console.error('Load user error:', err);
+        console.error('❌ Error loading user:', err);
       } finally {
         setLoading(false);
       }
     };
-
     loadUser();
   }, []);
 
   const saveUser = async (userData) => {
     setUser(userData);
     await AsyncStorage.setItem('user', JSON.stringify(userData));
+    console.log("✅ Token saved to AsyncStorage:", userData.access);
   };
 
   const clearUser = async () => {
     setUser(null);
     await AsyncStorage.removeItem('user');
+    console.log("🚫 Token cleared");
   };
 
   const register = async (email, username, password) => {
-     if (!isValidEmail(email)) {
-    alert('❌ Please enter a valid email with at least 8 characters.');
-    return false;
-  }
-
-  if (!isValidPassword(password)) {
-    alert('❌ Password must be at least 8 characters.');
-    return false;
-  }
-  if(!isValidUsername(username)) {
-    alert('❌ Username must be at least 3 characters and can only contain letters, numbers, and underscores.');
-    return false;
-  }
     try {
       const res = await fetch(`${API_URL}/register/`, {
         method: 'POST',
@@ -79,147 +55,82 @@ const isValidUsername = (username) => {
       });
 
       const data = await res.json();
-      if (res.ok) {
-        alert(' Registration successful!');
+      if (res.ok && data.access) {
+        console.log("✅ Registration successful");
+        const userData = { email: data.email, access: data.access };
+        await saveUser(userData);
         return true;
       } else {
-        alert(' Registration failed: ' + JSON.stringify(data));
+        console.log("❌ Registration failed:", data);
+        alert('❌ Registration failed');
         return false;
       }
     } catch (err) {
-      console.error('Register error:', err);
-      alert(' Register error: ' + err.message);
+      console.log('❌ Registration error:', err.message);
       return false;
     }
   };
 
- const login = async (email, password) => {
-   if (!isValidEmail(email)) {
-    alert('❌ Please enter a valid email with at least 8 characters.');
-    return false;
-  }
-
-  if (!isValidPassword(password)) {
-    alert('❌ Password must be at least 8 characters.');
-    return false;
-  }
-  try {
-    const res = await fetch(`${API_URL}/login/`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      await saveUser({
-        access: data.access,
-        email,
+  const login = async (email, password) => {
+    try {
+      const res = await fetch(`${API_URL}/login/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
       });
-      return true;
-    } else {
-      alert('Login failed: ' + JSON.stringify(data));
+
+      const data = await res.json();
+      if (res.ok && data.access) {
+        const userData = { email: data.email, access: data.access };
+        await saveUser(userData);
+        console.log("🔐 Token after login:", data.access);
+        return true;
+      } else {
+        console.log("❌ Login failed:", data);
+        alert("❌ Login failed");
+        return false;
+      }
+    } catch (err) {
+      console.log('❌ Login error:', err.message);
       return false;
     }
-  } catch (err) {
-    console.error('Login error:', err);
-    alert('Login error: ' + err.message);
-    return false;
-  }
-};
+  };
+
+  const validateToken = async (token) => {
+    console.log("🔐 Token being sent for validation:", token);
+    try {
+      const res = await fetch(`${API_URL}/profile/`, {
+        method: 'GET',
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (res.ok) {
+        console.log("✅ Token is valid");
+        return true;
+      } else {
+        console.log("❌ Invalid token");
+        return false;
+      }
+    } catch (err) {
+      console.error("❌ Token validation error:", err);
+      return false;
+    }
+  };
 
   const logout = async () => {
     await clearUser();
   };
 
-  const requestResetEmail = async (email,name) => {
-    try {
-      const res = await fetch(`${API_URL}/password-reset/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email:email, name:name }),
-      });
-
-      const data = await res.json();
-
-      if (res.ok) {
-        alert('📩 Reset link sent to your email.');
-        return true;
-      } else {
-        alert('❌ Reset failed: ' + JSON.stringify(data));
-        return false;
-      }
-    } catch (err) {
-      console.error('Reset request error:', err);
-      alert('❌ Reset request error: ' + err.message);
-      return false;
-    }
-  };
-
-  const verifyOtpAndResetPassword = async (email, otp, newPassword) => {
-  try {
-    const res = await fetch(`${API_URL}/password-reset/confirm/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp, new_password: newPassword }),
-    });
-
-    const data = await res.json();
-
-    if (res.ok) {
-      alert("✅ Password has been reset successfully.");
-      return true;
-    } else {
-      alert("❌ OTP verification failed: " + JSON.stringify(data));
-      return false;
-    }
-  } catch (err) {
-    console.error("OTP reset error:", err);
-    alert("❌ Error: " + err.message);
-    return false;
-  }
-};
-
-
-  // const resetPassword = async (uidb64, token, newPassword) => {
-  //   try {
-  //     const res = await fetch(
-  //       `${API_URL}/password-reset/verify/${uidb64}/${token}/`,
-  //       {
-  //         method: 'POST',
-  //         headers: { 'Content-Type': 'application/json' },
-  //         body: JSON.stringify({ new_password: newPassword }),
-  //       }
-  //     );
-
-  //     const data = await res.json();
-
-  //     if (res.ok) {
-  //       alert('✅ Password has been reset.');
-  //       return true;
-  //     } else {
-  //       alert('❌ Reset failed: ' + JSON.stringify(data));
-  //       return false;
-  //     }
-  //   } catch (err) {
-  //     console.error('Password reset error:', err);
-  //     alert('❌ Reset error: ' + err.message);
-  //     return false;
-  //   }
-  // };
-
   return (
     <AuthContext.Provider
       value={{
         user,
+        token: user?.access || null,
         loading,
         register,
         login,
         logout,
-        requestResetEmail,
-        // resetPassword,
-        verifyOtpAndResetPassword,
       }}
     >
       {children}
