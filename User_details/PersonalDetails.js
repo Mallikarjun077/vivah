@@ -152,17 +152,13 @@ export default function ProfileForm({ navigation }) {
       const data = await response.json();
       if (response.ok) {
         Alert.alert("Success", "Profile saved successfully");
-        navigation.navigate("SignIn");
+        navigation.navigate("Home");
       } else {
         Alert.alert("Failed", data.message || "Failed to save profile");
-        navigation.navigate("Home");
-
       }
     } catch (error) {
       console.error("Save error:", error);
       Alert.alert("Error", "Failed to save profile");
-      navigation.navigate("Home");
-
     } finally {
       setIsLoading(false);
     }

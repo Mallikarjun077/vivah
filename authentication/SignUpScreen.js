@@ -31,7 +31,7 @@ const SignUpScreen = ({ navigation }) => {
     const success = await register(email, username, password);
     if (success) {
       Alert.alert("Success", "Registered successfully!");
-      navigation.navigate("PersonalDetails");
+      navigation.navigate("SignIn");
     } else {
       Alert.alert("Error", "Registration failed. Try again.");
     }
