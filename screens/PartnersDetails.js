@@ -12,54 +12,168 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ScrollView } from "react-native-gesture-handler";
+import { AuthContext } from '../Create context/AuthContext'; 
+
 
 
 const ProfileDetailScreen = ({ route }) => {
   const [profiles, setProfiles] = useState([]);
   const [currentIndex, setCurrentIndex] = useState(0);
 
-// const { user } = useContext(AuthContext);
+const { user } = useContext(AuthContext);
   // const { profile } = route.params;
   console.log("Profile data:", profile);
 
   // const { profile: item } = route.params;
-const profile = route?.params?.profile; // Expect one profile object
+// const profile = route?.params?.profile; // Expect one profile object
+
+const profile = profiles.length > 0 ? profiles[currentIndex] : route?.params?.profile;
+
+  // const handleConnect = () => {
+  //   Alert.alert("Successfully Sent", `request to ${profile.name}`);
+  // };
+
+//   const handleConnect = async () => {
+//      const token = await AsyncStorage.getItem("token");
+//   const profileUserId = profile._id;
+//   if (!user || !user.access) {
+//     Alert.alert("Error", "You need to be logged in to send interest.");
+//     console.log("No profileUserId found");
+
+//     return;
+//   }
+
+//   try {
+//     const response = await fetch("https://backend-1-hccr.onrender.com/api/like/", {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json",
+//         Authorization: `Bearer ${user.access}`,
+//       },
+//       body: JSON.stringify({
+//         liked_user_id: profile.id, 
+//         user_id: user.id || user.user_id,   // 👈 Ensure this is the correct field from the profile object
+//       }),
+//     });
+
+//     const data = await response.json();
+
+//     if (response.ok) {
+//       Alert.alert("Interest Sent", `Successfully sent interest to ${profile.name}`);
+//     } else if (response.status === 400) {
+//       Alert.alert("Already Liked", data?.detail || "You have already liked this profile.");
+//     } else {
+//       console.log("Error response:", data);
+//       Alert.alert("Error", "Failed to send interest.");
+//     }
+//   } catch (error) {
+//     console.error("Send interest error:", error);
+//     Alert.alert("Error", "Something went wrong.");
+//   }
+// };
+const handleConnect = async () => {
+  try {
+    const likedUserId = profile?.user_id; // Use user_id, NOT _id
+
+    if (!likedUserId) {
+      console.error("Missing liked user_id");
+      return;
+    }
+
+    const response = await fetch("https://backend-1-hccr.onrender.com/api/like/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${user?.access}`,
+      },
+      body: JSON.stringify({
+        liked_user_id: likedUserId, 
+      }),
+    });
+
+    const result = await response.json();
+    console.log("Send interest result:", result);
+
+    if (response.ok) {
+      alert("Interest sent successfully!");
+    } else {
+      alert(`Failed: ${result.detail}`);
+    }
+  } catch (error) {
+    console.error("Send interest error:", error);
+    alert("Network error. Please try again.");
+  }
+};
 
 
-  const handleConnect = () => {
-    Alert.alert("Successfully Sent", `request to ${profile.name}`);
+
+ useEffect(() => {
+  const fetchProfiles = async () => {
+    if (!user || !user.access) {
+      console.log("User not logged in or token missing");
+      return;
+    }
+
+    try {
+      const response = await fetch("https://backend-1-hccr.onrender.com/api/pre-profiles/all/", {
+        headers: {
+          Authorization: `Bearer ${user.access}`,
+        },
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Failed to fetch profiles:", response.status, errorText);
+        return;
+      }
+
+      const data = await response.json();
+      setProfiles(data);
+      console.log("✅ Fetched Profiles:", data);
+    } catch (error) {
+      console.error("❌ Error fetching profiles:", error);
+    }
   };
 
-  useEffect(() => {
-    const fetchProfiles = async () => {
-      try {
-        const response = await fetch("https://backend-1-hccr.onrender.com/api/all-profiles/", {
-          headers: {
-            Authorization: `Bearer ${user?.access}`,
-          },
-        });
-  
-        const data = await response.json();
-        setProfiles(data);
-        console.log("Fetched Profiles:", data); 
-      } catch (error) {
-        console.error("Error fetching profiles:", error);
-      }
-    };
-  
-    fetchProfiles();
-  }, []);
+  fetchProfiles();
+}, [user]); 
+
 
   return (
-    
+    <View>
+      <View style={styles.arrow}>
+
+<TouchableOpacity
+  style={styles.buttonLeft}
+  onPress={() => {
+    if (currentIndex > 0) {
+      setCurrentIndex(currentIndex - 1);
+    }
+  }}
+>
+  <Ionicons name="arrow-back" size={40} color={currentIndex === 0 ? "gray" : "black"} />
+</TouchableOpacity>
+
+<TouchableOpacity
+  style={styles.buttonRight}
+  onPress={() => {
+    if (currentIndex < profiles.length - 1) {
+      setCurrentIndex(currentIndex + 1);
+    }
+  }}
+>
+  <Ionicons name="arrow-forward" size={40} color={currentIndex === profiles.length - 1 ? "gray" : "black"} />
+</TouchableOpacity>
+
+
+      </View>
     <ScrollView>
       <View style={{ flex: 1, backgroundColor: "#fff" }}>
   {/* Top Full Photo */}
  <Image
   source={
-    profile?.image
-      ? { uri: `data:image/jpeg;base64,${profile.image}` }
-
+    profile?.image_base64
+      ? { uri: `data:image/jpeg;base64,${profile.image_base64}` }
       : require("../assets/women.png") // fallback image
   }
   style={styles.topImage}
@@ -86,19 +200,7 @@ const profile = route?.params?.profile; // Expect one profile object
 </View>
 
       <View style={styles.container}>
-<View style={styles.arrow}>
 
- <TouchableOpacity style={styles.buttonLeft} onPress={() => currentIndex > 0 && setCurrentIndex(currentIndex - 1)}>
-        {/* <Text style={styles.buttonText}>Left</Text> */}
-        <Ionicons name="arrow-back" size={40} color="black" />
-
-      </TouchableOpacity>
-
-      <TouchableOpacity style={styles.buttonRight} onPress={() => currentIndex < profiles.length - 1 && setCurrentIndex(currentIndex + 1)}>
-        {/* <Text style={styles.buttonText}>Right</Text> */}
-        <Ionicons name="arrow-forward" size={40} color="black" />
-      </TouchableOpacity>
-      </View>
 
         <View style={styles.Bio}>
         
@@ -386,6 +488,7 @@ const profile = route?.params?.profile; // Expect one profile object
         </TouchableOpacity>
       </View>
     </ScrollView>
+    </View>
   );
 };
 
@@ -466,14 +569,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginVertical: 8,
+    marginVertical: 4,
   },
   line: { flex: 1, height: 1, backgroundColor: "#ccc" },
   gap: { width: 30 },
   columnContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 10,
+    marginBottom:  0,
   },
   column: { flex: 1, paddingHorizontal: 8 },
   label: { fontSize: 16, color: "#9C854A" },
@@ -505,28 +608,29 @@ overlayCard: {
   padding: 20,
   flex: 1,
 },
+   arrow: {
+    position: "absolute",
+    top: "50%",
+    left: 0,
+    right: 0,
+    zIndex: 100,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 10,
+  },
   buttonLeft: {
-    // padding: 12,
-    position:"absolute",
-    right:130,
-    height:50,
-    backgroundColor:"#E4DFD1",
-    alignItems:"center",
-    justifyContent:"center",
-    borderRadius:50,
-  
+    // backgroundColor: "white",
+    borderRadius: 25,
+    padding: 5,
+    elevation: 10,
   },
   buttonRight: {
-    // padding: 12,
-     position:"absolute",
-    left:130,
-      height:50,
-    backgroundColor:"#E4DFD1",
-     alignItems:"center",
-    justifyContent:"center",
-    borderRadius:50
-
+    // backgroundColor: "white",
+    borderRadius: 25,
+    padding: 5,
+    elevation: 10,
   },
+  
 // arrow:{
 // flexDirection:"row",
 // justifyContent:"space-around"

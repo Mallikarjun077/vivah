@@ -24,7 +24,7 @@ const SignInScreen = ({ navigation }) => {
   const handleLogin = async () => {
     const success = await login(email, password);
     if (success) {
-      navigation.navigate("PersonalDetails");
+      navigation.navigate("Home");
     } else {
       Alert.alert("Login Failed", "Invalid email or password");
     }

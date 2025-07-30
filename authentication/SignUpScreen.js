@@ -12,7 +12,6 @@ import {
   Keyboard,
 } from "react-native";
 import { TextInput } from "react-native-paper";
-
 import { AuthContext } from "../Create context/AuthContext";
 import { ScrollView } from "react-native-gesture-handler";
 
@@ -20,26 +19,43 @@ const SignUpScreen = ({ navigation }) => {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const { register } = useContext(AuthContext);
 
-  const handleSignUp = async () => {
-    if (!email || !username || !password) {
-      Alert.alert("Error", "All fields are required!");
-      return;
-    }
+ const handleSignUp = async () => {
+  console.log("Submitted:", { email, username, password });
 
-    const success = await register(email, username, password);
-    if (success) {
-      Alert.alert("Success", "Registered successfully!");
-      navigation.navigate("SignIn");
-    } else {
-      Alert.alert("Error", "Registration failed. Try again.");
-    }
-  };
+  if (!email || !username || !password) {
+    Alert.alert("Error", "All fields are required!");
+    return;
+  }
+
+  const emailRegex = /^\S+@\S+\.\S+$/;
+  if (!emailRegex.test(email)) {
+    Alert.alert("Invalid Email", "Please enter a valid email address.");
+    return;
+  }
+
+  if (username.length < 3) {
+    Alert.alert("Username too short", "Minimum 3 characters required.");
+    return;
+  }
+
+  if (password.length < 6) {
+    Alert.alert("Weak Password", "Password must be at least 6 characters.");
+    return;
+  }
+
+  console.log("✅ Passed validation, navigating...");
+
+  navigation.navigate("PreProfileStep1", {
+    email,
+    username,
+    password,
+  });
+};
+
 
   return (
     <KeyboardAvoidingView
-      // style={{ flex: 1 }}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
@@ -56,20 +72,20 @@ const SignUpScreen = ({ navigation }) => {
             <Text style={styles.title}>Nekar Vivah Vedike</Text>
 
             <TextInput
-              label={"Username"}
-              mode="outlined" // or "flat"
+              label="Username"
+              mode="outlined"
               theme={{ colors: { primary: "#9C854A", outline: "transparent" } }}
               style={styles.input}
               value={username}
               onChangeText={setUsername}
-              keyboardType="email-address"
               autoCapitalize="none"
             />
+
             <TextInput
               label="Email"
               value={email}
               onChangeText={setEmail}
-              mode="outlined" // or "flat"
+              mode="outlined"
               keyboardType="email-address"
               autoCapitalize="none"
               theme={{ colors: { primary: "#9C854A", outline: "transparent" } }}
@@ -77,7 +93,7 @@ const SignUpScreen = ({ navigation }) => {
             />
 
             <TextInput
-              label={"Password"}
+              label="Password"
               mode="outlined"
               style={styles.input}
               theme={{ colors: { primary: "#9C854A", outline: "transparent" } }}
@@ -94,7 +110,7 @@ const SignUpScreen = ({ navigation }) => {
               Already have an account?{" "}
               <Text
                 style={styles.signinLink}
-                onPress={() => navigation.navigate("Home")}
+                onPress={() => navigation.navigate("SignIn")}
               >
                 Sign In
               </Text>
@@ -120,7 +136,6 @@ const styles = StyleSheet.create({
   },
   scrollContainer: {
     flexGrow: 1,
-    // backgroundColor: '#F2F0E8',
     justifyContent: "center",
   },
   title: {
@@ -132,12 +147,9 @@ const styles = StyleSheet.create({
   },
   input: {
     height: 50,
-    borderColor: "white",
-
     marginBottom: 20,
     paddingHorizontal: 15,
     borderRadius: 10,
-    color: "black",
     fontSize: 16,
     backgroundColor: "#E4DFD1",
   },
@@ -169,10 +181,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
   },
   term: {
-    position: "fixed",
-    top: 20,
-    // left: 20,
-    // right: 20,
+    marginTop: 40,
     textAlign: "center",
     color: "#9C854A",
     fontSize: 14,

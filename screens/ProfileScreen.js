@@ -14,46 +14,48 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
-import { FontAwesome5 } from "@expo/vector-icons";
-
-const API_URL = "https://backend-1-hccr.onrender.com/api/profile/"; 
-
-const getProfile = async () => {
-  const storedUser = await AsyncStorage.getItem("user");
-  const user = JSON.parse(storedUser);
-  const token = user?.access;
-
-  console.log("Token being sent:", token);
-
-  if (!token) {
-    console.warn("No token found.");
-    return null;
-  }
-
-  const res = await fetch("https://backend-1-hccr.onrender.com/api/profile/", {
-    method: "GET", // ✅ RESTful method
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
-  if (res.status === 403) {
-    console.error(" Forbidden: Token expired or invalid");
-    return null;
-  }
-
-  const data = await res.json();
-  console.log("✅ Profile Data:", data);
-  console.log("Loaded profile photo URL:", data.profilePhoto);
-  console.log("✅ Full profile response:", data);
+import { set } from "lodash";
 
 
-  return data;
-};
+// const API_URL = "https://backend-1-hccr.onrender.com/api/profile/"; 
+// const PRE_PROFILE_URL = "https://backend-1-hccr.onrender.com/api/pre-profile/me";
+
+
+// const API_URL = "https://backend-1-hccr.onrender.com/api/profile/"; 
+
+
+// const getProfile = async () => {
+//   try {
+//     const token = await AsyncStorage.getItem("token");
+
+//     const response = await fetch("https://backend-1-hccr.onrender.com/api/pre-profile/me", {
+//       method: "GET",
+//       headers: {
+//         Authorization: `Bearer ${token}`,
+//         "Content-Type": "application/json",
+//       },
+//     });
+
+//     if (!response.ok) {
+//       throw new Error("Failed to fetch profile");
+//     }
+
+//     const profile = await response.json();
+//     console.log("My profile:", profile);
+//     return profile;
+
+//   } catch (error) {
+//     console.error("Error fetching profile:", error);
+//   }
+// };
+
+
 
 const ProfileScreen = () => {
   const navigation = useNavigation();
   const route = useRoute();
+  
+  const [profile, setProfile] = useState(null);
 
   const [fullScreenPhotoUri, setFullScreenPhotoUri] = useState(null);
 
@@ -66,6 +68,7 @@ const ProfileScreen = () => {
   const [profession, setProfession] = useState("");
   const [about, setAbout] = useState("");
   const [age, setAge] = useState("");
+  const [dob, setDob] = useState("");
   const [height, setHeight] = useState("");
   const [religion, setReligion] = useState("");
   const [motherTongue, setMotherTongue] = useState("");
@@ -94,174 +97,111 @@ const ProfileScreen = () => {
   const [ancestralOrigin, setAncestralOrigin] = useState("");
   const [mobile, setMobile] = useState("");
   const [socialMedia, setSocialMedia] = useState("");
+    const [languagesKnown, setLanguagesKnown] = useState([]);
+  
 
-  useEffect(() => {
-    const loadProfile = async () => {
-      const data = await getProfile();
-      if (data) {
-        
-if (data.image || data.image_path) {
-  const imageStr = data.image_path || data.image;
-
-  if (imageStr.startsWith("data:image")) {
-    // Already base64 with prefix
-    setProfilePhoto({ uri: imageStr });
-  } else if (imageStr.length > 100) {
-    // Assume it's base64 but without prefix
-    setProfilePhoto({ uri: `data:image/jpeg;base64,${imageStr}` });
-  } else {
-    console.warn("⚠️ Image string too short or invalid");
-    setProfilePhoto(require('../assets/men.png'));
-  }
-} else {
-  console.warn("⚠️ No image in response.");
-  setProfilePhoto(require('../assets/men.png'));
-}
-
-
-        setName(data.name || "");
-        setSurname(data.surname || "Not provided");
-        setAge(data.age || "Not provided");
-        setHeight(data.height || "Not provided");
-        setMotherTongue(data.motherTongue || "Not Provided");
-        setMaritalStatus(data.maritalStatus || "Not Provided");
-        setEatingHabits(data.eatingHabits || "Not Provided");
-        setReligion(data.religion || "Not Provided");
-        setCommunity(data.community || "Not Provided");
-        setSubCaste(data.subCaste || "Not Provided");
-        setGothra(data.gothra || "Not Provided");
-        setDosha(data.dosha || "Not Provided");
-        setStar(data.star || "Not Provided");
-        setRassi(data.rassi || "Not Provided");
-        setHoroscope(data.horoscope || "Not Provided");
-        setProfession(data.profession || "Not Provided");
-        setQualification(data.qualification || "Not Provided");
-        setJobSector(data.jobSector || "Not Provided");
-        setIncome(data.income || "Not Provided");
-        setFamilyStatus(data.familyStatus || "Not Provided");
-        setFamilyType(data.familyType || "Not Provided");
-        setFatherOccupation(data.fatherOccupation || "Not Provided");
-        setMotherOccupation(data.motherOccupation || "Not Provided");
-        setBrothers(data.brothers || "Not Provided");
-        setSisters(data.sisters || "Not Provided");
-        setCountry(data.country || "Not Provided");
-        setState(data.state || "Not Provided");
-        setCity(data.city || "Not Provided");
-        setAncestralOrigin(data.ancestralOrigin || "Not Provided");
-        setMobile(data.mobile || "Not Provided");
-        setSocialMedia(data.socialMedia || "Not Provided");
-        setAbout(data.about || "Not Provided");
-        // setProfilePhoto({ uri: data.profile_photo });
-        // setPhotos(data.photos?.map((uri) => ({ uri })) || []);
-
-        await AsyncStorage.setItem("userProfile", JSON.stringify(data));
-      }
-    };
-
-    loadProfile();
-  }, []);
-
-  const saveProfile = async () => {
+ useEffect(() => {
+  const loadProfile = async () => {
     try {
-      const token = await AsyncStorage.getItem("user"); // adjust key if needed
+      const token = await AsyncStorage.getItem("token");
 
-      const body = {
-        name,
-        surname,
-        age,
-        height,
-        maritalStatus,
-        eatingHabits,
-        religion,
-        community,
-        subCaste,
-        gothra,
-        dosha,
-        star,
-        rassi,
-        horoscope,
-        profession,
-        qualification,
-        jobSector,
-        income,
-        familyStatus,
-        familyType,
-        fatherOccupation,
-        motherOccupation,
-        brothers,
-        sisters,
-        country,
-        state,
-        city,
-        ancestralOrigin,
-        mobile,
-        socialMedia,
-        about,
-        // profile_photo: profilePhoto?.uri,
-        // photos: photos.map((p) => p.uri),
-      };
-
-      const res = await fetch(API_URL, {
-        method: "POST", // or "PUT" based on your backend
+      const response = await fetch("https://backend-1-hccr.onrender.com/api/pre-profile/me", {
+        method: "GET",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        body: JSON.stringify(body),
       });
 
-      const data = await res.json();
-      if (!res.ok) {
-        console.error("Auto-save error:", data);
+      if (!response.ok) throw new Error("Failed to fetch profile");
+
+      const data = await response.json();
+      console.log("Photo (first 100 chars):", data.image_base64?.substring(0, 100));
+
+      setProfile(data);
+
+      // 🖼️ Set base64 image
+      if (data.image_base64 && data.image_base64.length > 100) {
+        setProfilePhoto({ uri: `data:image/jpeg;base64,${data.image_base64}` });
+      } else {
+        setProfilePhoto(require("../assets/men.png"));
       }
+
+      // Set individual fields
+      setName(data.name || "");
+      setSurname(data.surname || "Not provided");
+      setAge(data.age || "Not provided");
+      setDob(data.dob || "Not provided");
+      setHeight(data.height || "Not provided");
+      setMotherTongue(data.motherTongue || "Not Provided");
+      setMaritalStatus(data.maritalStatus || "Not Provided");
+      setEatingHabits(data.eatingHabits || "Not Provided");
+      setReligion(data.religion || "Not Provided");
+      setCommunity(data.community || "Not Provided");
+      setSubCaste(data.subCaste || "Not Provided");
+      setGothra(data.gothra || "Not Provided");
+      setDosha(data.dosha || "Not Provided");
+      setStar(data.star || "Not Provided");
+      setRassi(data.rassi || "Not Provided");
+      setHoroscope(data.horoscope || "Not Provided");
+      setProfession(data.profession || "Not Provided");
+      setQualification(data.qualification || "Not Provided");
+      setJobSector(data.jobSector || "Not Provided");
+      setIncome(data.income || "Not Provided");
+      setFamilyStatus(data.familyStatus || "Not Provided");
+      setFamilyType(data.familyType || "Not Provided");
+      setFatherOccupation(data.fatherOccupation || "Not Provided");
+      setMotherOccupation(data.motherOccupation || "Not Provided");
+      setBrothers(data.brothers || "Not Provided");
+      setSisters(data.sisters || "Not Provided");
+      setCountry(data.country || "Not Provided");
+      setState(data.state || "Not Provided");
+      setCity(data.city || "Not Provided");
+      setAncestralOrigin(data.ancestralOrigin || "Not Provided");
+      setMobile(data.mobile || "Not Provided");
+      setSocialMedia(data.socialMedia || "Not Provided");
+      setAbout(data.about || "Not Provided");
+      setLanguagesKnown(data.languagesKnown || []);
+
+      await AsyncStorage.setItem("userProfile", JSON.stringify(data));
     } catch (error) {
-      console.error("Auto-save failed:", error);
+      console.error("❌ Failed to fetch profile:", error);
     }
   };
 
-  useEffect(() => {
-    const timeout = setTimeout(() => {
-      saveProfile();
-    }, 1000); // 1 second debounce
+  loadProfile();
+}, []);
 
-    return () => clearTimeout(timeout);
-  }, [
-    // profilePhoto,
-    name,
-    surname,
-    age,
-    height,
-    motherTongue,
-    maritalStatus,
-    eatingHabits,
-    religion,
-    community,
-    subCaste,
-    gothra,
-    dosha,
-    star,
-    rassi,
-    horoscope,
-    profession,
-    qualification,
-    jobSector,
-    income,
-    familyStatus,
-    familyType,
-    fatherOccupation,
-    motherOccupation,
-    brothers,
-    sisters,
-    country,
-    state,
-    city,
-    ancestralOrigin,
-    mobile,
-    socialMedia,
-    about,
-    // profile_photo: profilePhoto?.uri,
-    // photos: photos.map((p) => p.uri),
-  ]);
+
+
+ useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+
+        const response = await fetch("https://your-backend.com/api/pre-profile/me", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        });
+
+        if (!response.ok) throw new Error("Failed to fetch");
+
+        const data = await response.json();
+        console.log("Photo (first 100 chars):", data.photo?.substring(0, 100));
+        setProfile(data);
+        
+      } catch (error) {
+        console.log("Failed to fetch profile:", error);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+
   const pickImage = async () => {
   const result = await ImagePicker.launchImageLibraryAsync({
     mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -276,19 +216,22 @@ if (data.image || data.image_path) {
   }
 };
 
+
   return (
     <View style={styles.container}>
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.profileContainer}>
           <View>
-            <Image
+            
+          <Image
   source={
-    profilePhoto
-      ? profilePhoto
+    profile?.image_base64
+      ? { uri: `data:image/jpeg;base64,${profile.image_base64}` }
       : require("../assets/men.png")
   }
   style={styles.profileImage}
 />
+
 
           </View>
           <View>
@@ -323,8 +266,10 @@ if (data.image || data.image_path) {
               name,
               surname,
               age,
+              dob,
               height,
               motherTongue,
+              languagesKnown,
               maritalStatus,
               eatingHabits,
               religion,
@@ -478,7 +423,7 @@ if (data.image || data.image_path) {
         <View style={styles.columnContainer}>
           <View style={styles.column}>
             <Text style={styles.label}>Date Of Birth</Text>
-            <Text style={styles.value}>{age} </Text>
+            <Text style={styles.value}>{dob} </Text>
           </View>
           <View style={styles.column}>
             <Text style={styles.label}>Height</Text>
@@ -495,7 +440,7 @@ if (data.image || data.image_path) {
         <View style={styles.columnContainer}>
           <View style={styles.column}>
             <Text style={styles.label}>Age</Text>
-            <Text style={styles.value}>{maritalStatus} years</Text>
+            <Text style={styles.value}>{age} years</Text>
           </View>
           <View style={styles.column}>
             <Text style={styles.label}>Eating Habits</Text>
@@ -515,7 +460,7 @@ if (data.image || data.image_path) {
           </View>
           <View style={styles.column}>
             <Text style={styles.label}>Languages Knows</Text>
-            <Text style={styles.value}>{height}</Text>
+            <Text style={styles.value}>{languagesKnown}</Text>
           </View>
         </View>
 
@@ -900,14 +845,14 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
-    marginVertical: 8,
+    marginVertical: 4,
   },
   line: { flex: 1, height: 1, backgroundColor: "#ccc" },
-  gap: { width: 30 },
+  gap: { width: 25 },
   columnContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 10,
+    marginBottom: 0,
   },
   column: { flex: 1, paddingHorizontal: 8 },
   label: { fontSize: 16, color: "#9C854A" },

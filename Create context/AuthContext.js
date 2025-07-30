@@ -8,42 +8,21 @@ export const AuthContext = createContext();
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-  const isValidEmail = (email) => {
-  // Allows all valid email formats
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  return email.length >= 4 && emailRegex.test(email);
-};
 
-const isValidPassword = (password) => {
-  // At least 8 characters, includes upper, lower, number, special char
-  const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/;
-  return passwordRegex.test(password);
-};
-const isValidUsername = (username) => {
-  // At least 3 characters, letters, numbers, underscores allowed
-  const usernameRegex = /^[a-zA-Z0-9_]{3,}$/;
-  return usernameRegex.test(username);
-};
-
-
-  const API_URL = 'https://backend-1-hccr.onrender.com/api'; 
+  const API_URL = 'https://backend-1-hccr.onrender.com/api';
 
   useEffect(() => {
     const loadUser = async () => {
       try {
         await Font.loadAsync({ ...Ionicons.font });
-
         const storedUser = await AsyncStorage.getItem('user');
-        if (storedUser) {
-          setUser(JSON.parse(storedUser));
-        }
+        if (storedUser) setUser(JSON.parse(storedUser));
       } catch (err) {
         console.error('Load user error:', err);
       } finally {
         setLoading(false);
       }
     };
-
     loadUser();
   }, []);
 
@@ -57,52 +36,45 @@ const isValidUsername = (username) => {
     await AsyncStorage.removeItem('user');
   };
 
-  const register = async (email, username, password) => {
-     if (!isValidEmail(email)) {
-    alert('❌ Please enter a valid email with at least 8 characters.');
-    return false;
-  }
+  const isValidEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const isValidPassword = (password) =>
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[\W_]).{8,}$/.test(password);
+  const isValidUsername = (username) =>
+    /^[a-zA-Z0-9_]{3,}$/.test(username);
 
-  if (!isValidPassword(password)) {
-    alert('❌ Password must be at least 8 characters.');
-    return false;
-  }
-  if(!isValidUsername(username)) {
-    alert('❌ Username must be at least 3 characters and can only contain letters, numbers, and underscores.');
-    return false;
-  }
-    try {
-      const res = await fetch(`${API_URL}/register/`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, username, password }),
-      });
+  // ✅ REGISTER + PROFILE COMBINED
+ // AuthContext.js or wherever your register function is
+const register = async (email, username, password, preProfile) => {
+  try {
+    const response = await fetch(`${API_URL}/register_with_profile/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email,
+        username,
+        password,
+        pre_profile: preProfile,
+      }),
+    });
 
-      const data = await res.json();
-      if (res.ok) {
-        alert(' Registration successful!');
-        return true;
-      } else {
-        alert(' Registration failed: ' + JSON.stringify(data));
-        return false;
-      }
-    } catch (err) {
-      console.error('Register error:', err);
-      alert(' Register error: ' + err.message);
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.log("❌ Register failed", errorData);
       return false;
     }
-  };
 
- const login = async (email, password) => {
-   if (!isValidEmail(email)) {
-    alert('❌ Please enter a valid email with at least 8 characters.');
+    return true;
+  } catch (err) {
+    console.error("❌ Register error", err);
     return false;
   }
+};
 
-  if (!isValidPassword(password)) {
-    alert('❌ Password must be at least 8 characters.');
-    return false;
-  }
+
+  const login = async (email, password) => {
+  if (!isValidEmail(email)) return alert('❌ Invalid email') || false;
+  if (!isValidPassword(password)) return alert('❌ Invalid password') || false;
+
   try {
     const res = await fetch(`${API_URL}/login/`, {
       method: 'POST',
@@ -117,28 +89,29 @@ const isValidUsername = (username) => {
         access: data.access,
         email,
       });
+      await AsyncStorage.setItem("token", data.access); // ✅ ADD THIS
       return true;
     } else {
-      alert('Login failed: ' + JSON.stringify(data));
+      alert('❌ Login failed: ' + (data.detail || JSON.stringify(data)));
       return false;
     }
   } catch (err) {
-    console.error('Login error:', err);
-    alert('Login error: ' + err.message);
+    alert('❌ Login error: ' + err.message);
     return false;
   }
 };
+const logout = async () => {
+  await clearUser();
+  await AsyncStorage.removeItem("token"); // ✅ cleanup
+};
 
-  const logout = async () => {
-    await clearUser();
-  };
 
-  const requestResetEmail = async (email,name) => {
+  const requestResetEmail = async (email, name) => {
     try {
       const res = await fetch(`${API_URL}/password-reset/`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email:email, name:name }),
+        body: JSON.stringify({ email, name }),
       });
 
       const data = await res.json();
@@ -151,63 +124,33 @@ const isValidUsername = (username) => {
         return false;
       }
     } catch (err) {
-      console.error('Reset request error:', err);
       alert('❌ Reset request error: ' + err.message);
       return false;
     }
   };
 
   const verifyOtpAndResetPassword = async (email, otp, newPassword) => {
-  try {
-    const res = await fetch(`${API_URL}/password-reset/confirm/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, otp, new_password: newPassword }),
-    });
+    try {
+      const res = await fetch(`${API_URL}/password-reset/confirm/`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp, new_password: newPassword }),
+      });
 
-    const data = await res.json();
+      const data = await res.json();
 
-    if (res.ok) {
-      alert("✅ Password has been reset successfully.");
-      return true;
-    } else {
-      alert("❌ OTP verification failed: " + JSON.stringify(data));
+      if (res.ok) {
+        alert('✅ Password has been reset.');
+        return true;
+      } else {
+        alert('❌ OTP verification failed: ' + JSON.stringify(data));
+        return false;
+      }
+    } catch (err) {
+      alert('❌ OTP error: ' + err.message);
       return false;
     }
-  } catch (err) {
-    console.error("OTP reset error:", err);
-    alert("❌ Error: " + err.message);
-    return false;
-  }
-};
-
-
-  // const resetPassword = async (uidb64, token, newPassword) => {
-  //   try {
-  //     const res = await fetch(
-  //       `${API_URL}/password-reset/verify/${uidb64}/${token}/`,
-  //       {
-  //         method: 'POST',
-  //         headers: { 'Content-Type': 'application/json' },
-  //         body: JSON.stringify({ new_password: newPassword }),
-  //       }
-  //     );
-
-  //     const data = await res.json();
-
-  //     if (res.ok) {
-  //       alert('✅ Password has been reset.');
-  //       return true;
-  //     } else {
-  //       alert('❌ Reset failed: ' + JSON.stringify(data));
-  //       return false;
-  //     }
-  //   } catch (err) {
-  //     console.error('Password reset error:', err);
-  //     alert('❌ Reset error: ' + err.message);
-  //     return false;
-  //   }
-  // };
+  };
 
   return (
     <AuthContext.Provider
@@ -218,7 +161,6 @@ const isValidUsername = (username) => {
         login,
         logout,
         requestResetEmail,
-        // resetPassword,
         verifyOtpAndResetPassword,
       }}
     >

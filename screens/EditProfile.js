@@ -26,32 +26,25 @@ const EditProfileScreen = () => {
     const [surname, setSurname] = useState(route.params.surname);
   
   const [profession, setProfession] = useState(route.params.profession);
-  const [about, setAbout] = useState(route.params.about);
 const [age, setAge] = useState(route.params.age);
-  const [height, setHeight] = useState(route.params.height);
   const [religion, setReligion] = useState(route.params.religion);
-  const [motherTongue, setMotherTongue] = useState(route.params.motherTongue);
-  const [community, setCommunity] = useState(route.params.community);
-  const [city, setCity] = useState(route.params.city);
+  
   
 
-  const handleSave = () => {
-    navigation.navigate("Profile", {
-      updatedProfile: {
-        profilePhoto,
-        name,
-        surname,
-        profession,
-        about,
-           age,
-      height,
+ const handleSave = async () => {
+  const base64Photo = await convertToBase64(profilePhoto.uri);
+  navigation.navigate("Profile", {
+    updatedProfile: {
+      name,
+      surname,
+      profession,
+      age,
       religion,
-      motherTongue,
-      community,
-      city,
-      },
-    });
-  };
+      profile_photo: base64Photo,
+    },
+  });
+};
+
 
 
 const pickImage = async () => {
@@ -91,15 +84,8 @@ const pickImage = async () => {
       <Text style={styles.label}>Profession</Text>
       <TextInput style={styles.input} value={profession} onChangeText={setProfession} />
 
-      <Text style={styles.label}>About</Text>
-      <TextInput
-        style={[styles.input, { height: 100 }]}
-        value={about}
-        onChangeText={setAbout}
-        multiline
-      />
+    
 
-      <Text style={styles.label}>Details</Text>
       {/* Row 1: Age & Height */}
 <View style={styles.separatorContainer}>
   <View style={styles.line} />
@@ -116,14 +102,7 @@ const pickImage = async () => {
       keyboardType="numeric"
     />
   </View>
-  <View style={styles.column}>
-    <Text style={styles.label}>Height</Text>
-    <TextInput
-      style={styles.input}
-      value={height}
-      onChangeText={setHeight}
-    />
-  </View>
+
 </View>
 
 {/* Row 2: Religion & Mother Tongue */}
@@ -132,7 +111,7 @@ const pickImage = async () => {
   <View style={styles.gap} />
   <View style={styles.line} />
 </View>
-<View style={styles.columnContainer}>
+<View >
   <View style={styles.column}>
     <Text style={styles.label}>Religion</Text>
     <TextInput
@@ -141,40 +120,10 @@ const pickImage = async () => {
       onChangeText={setReligion}
     />
   </View>
-  <View style={styles.column}>
-    <Text style={styles.label}>Mother Tongue</Text>
-    <TextInput
-      style={styles.input}
-      value={motherTongue}
-      onChangeText={setMotherTongue}
-    />
-  </View>
+ 
 </View>
 
 {/* Row 3: Community & City */}
-<View style={styles.separatorContainer}>
-  <View style={styles.line} />
-  <View style={styles.gap} />
-  <View style={styles.line} />
-</View>
-<View style={styles.columnContainer}>
-  <View style={styles.column}>
-    <Text style={styles.label}>Community</Text>
-    <TextInput
-      style={styles.input}
-      value={community}
-      onChangeText={setCommunity}
-    />
-  </View>
-  <View style={styles.column}>
-    <Text style={styles.label}>City</Text>
-    <TextInput
-      style={styles.input}
-      value={city}
-      onChangeText={setCity}
-    />
-  </View>
-</View>
 
      
       <TouchableOpacity style={styles.saveButton} onPress={handleSave}>

@@ -155,10 +155,12 @@ export default function ProfileForm({ navigation }) {
         navigation.navigate("Home");
       } else {
         Alert.alert("Failed", data.message || "Failed to save profile");
+
       }
     } catch (error) {
       console.error("Save error:", error);
       Alert.alert("Error", "Failed to save profile");
+
     } finally {
       setIsLoading(false);
     }
@@ -217,13 +219,13 @@ export default function ProfileForm({ navigation }) {
         />
         <HelperText type="error" visible={!!errors.mobile}>{errors.mobile}</HelperText>
 
-        <TextInput
+        {/* <TextInput
           label="DOB"
           value={form.dob}
           onChangeText={(val) => handleChange("dob", val)}
           mode="outlined"
           style={styles.input}
-        />
+        /> */}
 
         <TextInput
           label="Age"
@@ -247,17 +249,17 @@ export default function ProfileForm({ navigation }) {
         />
         <HelperText type="error" visible={!!errors.height}>{errors.height}</HelperText>
 
-        <TextInput
+        {/* <TextInput
           label="About"
           value={form.about}
           onChangeText={(val) => handleChange("about", val)}
           mode="outlined"
           style={styles.input}
           multiline
-        />
+        /> */}
 
         {/* DROPDOWNS & TEXT INPUTS */}
-        <TextInput
+        {/* <TextInput
           label="Religion"
           value={form.religion}
           onChangeText={(val) => handleChange("religion", val)}
@@ -292,7 +294,7 @@ export default function ProfileForm({ navigation }) {
         <TextInput label="Mother Occupation" value={form.motherOccupation} onChangeText={(val) => handleChange("motherOccupation", val)} mode="outlined" style={styles.input} />
         <TextInput label="Brothers" value={form.brothers} onChangeText={(val) => handleChange("brothers", val)} keyboardType="numeric" mode="outlined" style={styles.input} />
         <TextInput label="Sisters" value={form.sisters} onChangeText={(val) => handleChange("sisters", val)} keyboardType="numeric" mode="outlined" style={styles.input} />
-        <TextInput label="Social Media" value={form.socialMedia} onChangeText={(val) => handleChange("socialMedia", val)} mode="outlined" style={styles.input} />
+        <TextInput label="Social Media" value={form.socialMedia} onChangeText={(val) => handleChange("socialMedia", val)} mode="outlined" style={styles.input} /> */}
 
         <Button
           mode="contained"

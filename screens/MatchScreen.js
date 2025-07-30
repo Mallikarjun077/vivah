@@ -9,9 +9,11 @@ import {
   Image,
   TextInput,
   ScrollView,
+  ActivityIndicator
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { AuthContext } from "../Create context/AuthContext";
+import ShimmerPlaceholder from 'react-native-shimmer-placeholder';
 
 const MatchScreen = () => {
   const navigation = useNavigation();
@@ -53,14 +55,17 @@ const MatchScreen = () => {
 
 const [profiles, setProfiles] = useState([]);
 const { user } = useContext(AuthContext); // ✅ This must be inside the component
+const [loading, setLoading] = useState(true);
 
 
 
  
 useEffect(() => {
   const fetchProfiles = async () => {
+    if (!user?.access) return;
+    
     try {
-      const response = await fetch("https://backend-1-hccr.onrender.com/api/all-profiles/", {
+      const response = await fetch("https://backend-1-hccr.onrender.com/api/pre-profiles/all/", {
         headers: {
           Authorization: `Bearer ${user?.access}`,
         },
@@ -71,11 +76,31 @@ useEffect(() => {
       console.log("Fetched Profiles:", data); 
     } catch (error) {
       console.error("Error fetching profiles:", error);
+    }finally {
+      setLoading(false);
     }
   };
 
   fetchProfiles();
-}, []);
+}, [user]);
+if (loading) {
+    return (
+      <ScrollView contentContainerStyle={styles.loadingContainer}>
+        {[1, 2, 3, 4].map((_, i) => (
+          <View key={i} style={styles.profileRow}>
+            <View style={styles.textSection}>
+              <ShimmerPlaceholder style={{ height: 18, marginBottom: 5 }} />
+              <ShimmerPlaceholder style={{ height: 18, marginBottom: 5, width: '70%' }} />
+              <ShimmerPlaceholder style={{ height: 14, width: '50%' }} />
+            </View>
+            <ShimmerPlaceholder style={styles.profileImage} />
+          </View>
+        ))}
+      </ScrollView>
+    );
+  }
+
+
 
 const filteredProfiles = Array.isArray(profiles)
   ? profiles.filter((profile) => {
@@ -218,9 +243,9 @@ const filteredProfiles = Array.isArray(profiles)
               
 <Image
   source={
-    profile.image
-      ? { uri: `data:image/jpeg;base64,${profile.image}` }
-      : require("../assets/men.png") // fallback if image is missing
+    profile?.image_base64
+      ? { uri: `data:image/jpeg;base64,${profile.image_base64}` }
+      : require("../assets/men.png")
   }
   style={styles.profileImage}
 />
@@ -325,6 +350,37 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+  },
+    loadingContainer: {
+    padding: 16,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+  },
+  card: {
+    width: '47%',       
+    marginBottom: 20,   
+  },
+  image: {
+    height: 150,        
+    borderRadius: 8,
+    marginBottom: 10,
+  },
+  name: {
+    height: 16,         
+    width: '80%',       
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  detail: {
+    height: 14,
+    width: '60%',      
+    borderRadius: 4,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
   iconButton: { alignItems: "center" },
   iconLabel: { fontSize: 14, color: "#9C854A", marginTop: 4 },

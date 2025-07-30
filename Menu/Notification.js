@@ -1,17 +1,21 @@
-import React, { useEffect } from "react";
-import { View, Text, Alert } from "react-native";
+// App.js
+import React, { useEffect } from 'react';
+import { View, Text, Alert } from 'react-native';
+import '../i18n'; // Make sure path is correct
+import { useTranslation } from 'react-i18next';
 
-const MatchScreen = () => {
-  
+export default function App() {
+  const { t, i18n } = useTranslation();
+
   useEffect(() => {
-    alert("Coming Soon!");
+    i18n.changeLanguage('kn'); // Change to Kannada
+    Alert.alert(t('alert_title'), t('alert_message'));
   }, []);
 
   return (
-    <View style={{ flex: 1, justifyContent: "center", alignItems: "center", backgroundColor: "#F2F0E8" }}>
-      <Text style={{ fontSize: 20, color: "#1C170D" }}>Coming Soon</Text>
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text style={{ fontSize: 24 }}>{t('welcome')}</Text>
+      <Text style={{ fontSize: 18, marginVertical: 10 }}>{t('coming_soon')}</Text>
     </View>
   );
-};
-
-export default MatchScreen;
+}
