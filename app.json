@@ -14,7 +14,7 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.mallushirwal.nekarvivahvedike",
+      "bundleIdentifier": "com.SHIRWAL13.nekarvivahvedike",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
@@ -26,7 +26,7 @@
         "backgroundColor": "#ffffff"
       },
       "edgeToEdgeEnabled": true,
-      "package": "com.mallushirwal.nekarvivahvedike"
+      "package": "com.SHIRWAL13.nekarvivahvedike"
     },
     "web": {
       "favicon": "./assets/bride.png"
