@@ -1,17 +1,17 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { useTranslation } from 'react-i18next';
+// import { useTranslation } from 'react-i18next';
 
 const SettingScreen = ({ navigation }) => {
-  const { t } = useTranslation();
+  // const { t } = useTranslation();
 
   const settingsOptions = [
-    { title: t('profile'), icon: 'person-circle', screen: 'PersonalDetails' },
-    { title: t('notifications'), icon: 'notifications', screen: 'Notification' },
-    { title: t('language'), icon: 'language' },
-    { title: t('privacy_policy'), icon: 'shield-checkmark' },
-    { title: t('logout'), icon: 'log-out', screen: 'SignIn' },
+    { title: ('profile'), icon: 'person-circle', screen: 'PersonalDetails' },
+    { title: ('notifications'), icon: 'notifications', screen: 'Notification' },
+    { title: ('language'), icon: 'language' },
+    { title: ('privacy_policy'), icon: 'shield-checkmark' },
+    { title: ('logout'), icon: 'log-out', screen: 'SignIn' },
   ];
 
   const handlePress = (item) => {
