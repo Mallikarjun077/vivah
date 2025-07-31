@@ -161,7 +161,7 @@ const ProfileScreen = () => {
       setMobile(data.mobile || "Not Provided");
       setSocialMedia(data.socialMedia || "Not Provided");
       setAbout(data.about || "Not Provided");
-      setLanguagesKnown(data.languagesKnown || []);
+      setLanguagesKnown(data.languagesKnown || "Not Provided");
 
       await AsyncStorage.setItem("userProfile", JSON.stringify(data));
     } catch (error) {

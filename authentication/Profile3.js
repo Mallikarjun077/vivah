@@ -34,7 +34,7 @@ export default function PreProfileStep3() {
   useEffect(() => {
     const fetchMasters = async () => {
       try {
-        const baseUrl = "http://backend-1-hccr.onrender.com/api/masters";
+        const baseUrl = "https://backend-1-hccr.onrender.com/api/masters";
 
         const res1 = await fetch(`${baseUrl}/family-status`);
         setFamilyStatusOptions(await res1.json());

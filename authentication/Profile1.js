@@ -56,7 +56,7 @@ export default function PreProfileStep1() {
 
     const fetchMasters = async () => {
       try {
-        const backendUrl = "http://backend-1-hccr.onrender.com/api/masters";
+        const backendUrl = "https://backend-1-hccr.onrender.com/api/masters";
 
         const [genderRes, motherRes, langRes] = await Promise.all([
           fetch(`${backendUrl}/gender`),

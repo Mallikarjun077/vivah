@@ -34,7 +34,7 @@ export default function PreProfileStep2() {
   useEffect(() => {
     const fetchMasters = async () => {
       try {
-        const baseUrl = "http://backend-1-hccr.onrender.com/api/masters";
+        const baseUrl = "https://backend-1-hccr.onrender.com/api/masters";
 
         const relRes = await fetch(`${baseUrl}/religion`);
         setReligionOptions(await relRes.json());

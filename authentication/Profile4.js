@@ -55,7 +55,7 @@ export default function PreProfileStep4() {
   useEffect(() => {
   const fetchMasters = async () => {
     try {
-      const baseUrl = "http://backend-1-hccr.onrender.com/api/masters";
+      const baseUrl = "https://backend-1-hccr.onrender.com/api/masters";
 
       const [qualRes, jobRes, countryRes, stateRes, cityRes] = await Promise.all([
         fetch(`${baseUrl}/qualification`),
