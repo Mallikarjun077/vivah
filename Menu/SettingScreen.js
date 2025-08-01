@@ -7,7 +7,7 @@ const SettingScreen = ({ navigation }) => {
   // const { t } = useTranslation();
 
   const settingsOptions = [
-    { title: ('profile'), icon: 'person-circle', screen: 'PersonalDetails' },
+    { title: ('profile'), icon: 'person-circle', screen: 'Profile' },
     { title: ('notifications'), icon: 'notifications', screen: 'Notification' },
     { title: ('language'), icon: 'language' },
     { title: ('privacy_policy'), icon: 'shield-checkmark' },

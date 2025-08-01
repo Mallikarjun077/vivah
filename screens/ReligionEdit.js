@@ -1,20 +1,19 @@
 import React, { useState, useEffect } from "react";
 import {
   View,
-  Text,
   ScrollView,
+  Alert,
   StyleSheet,
-  TouchableOpacity,
 } from "react-native";
-import { Picker } from "@react-native-picker/picker";
+import { TextInput, Button, Text } from "react-native-paper";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useNavigation } from "@react-navigation/native";
 
-const EditReligionInfo = () => {
+const EditReligiousInfoScreen = () => {
   const navigation = useNavigation();
 
   const [religion, setReligion] = useState("");
-  const [caste, setCaste] = useState("");
+  const [community, setCommunity] = useState("");
   const [subCaste, setSubCaste] = useState("");
   const [gothra, setGothra] = useState("");
   const [dosha, setDosha] = useState("");
@@ -22,31 +21,43 @@ const EditReligionInfo = () => {
   const [rassi, setRassi] = useState("");
   const [horoscope, setHoroscope] = useState("");
 
+  // Optional: Load existing profile data from API on mount
   useEffect(() => {
-    const loadProfile = async () => {
-      const profile = await AsyncStorage.getItem("userProfile");
-      if (profile) {
-        const data = JSON.parse(profile);
-        setReligion(data.religion || "");
-        setCaste(data.caste || "");
-        setSubCaste(data.subCaste || "");
-        setGothra(data.gothra || "");
-        setDosha(data.dosha || "");
-        setStar(data.star || "");
-        setRassi(data.rassi || "");
-        setHoroscope(data.horoscope || "");
+    const fetchProfile = async () => {
+      try {
+        const token = await AsyncStorage.getItem("token");
+        const response = await fetch("https://backend-1-hccr.onrender.com/api/pre-profile/me", {
+          method: "GET",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setReligion(data.religion || "");
+          setCommunity(data.community || "");
+          setSubCaste(data.subCaste || "");
+          setGothra(data.gothra || "");
+          setDosha(data.dosha || "");
+          setStar(data.star || "");
+          setRassi(data.rassi || "");
+          setHoroscope(data.horoscope || "");
+        } else {
+          console.warn("Failed to fetch existing profile.");
+        }
+      } catch (err) {
+        console.error("Fetch profile error:", err);
       }
     };
-    loadProfile();
+
+    fetchProfile();
   }, []);
 
   const saveProfile = async () => {
-    const stored = await AsyncStorage.getItem("userProfile");
-    const profile = stored ? JSON.parse(stored) : {};
     const updated = {
-      ...profile,
       religion,
-      caste,
+      community,
       subCaste,
       gothra,
       dosha,
@@ -54,148 +65,130 @@ const EditReligionInfo = () => {
       rassi,
       horoscope,
     };
-    await AsyncStorage.setItem("userProfile", JSON.stringify(updated));
-    navigation.goBack();
+
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const response = await fetch("https://backend-1-hccr.onrender.com/api/pre-profile/me", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updated),
+      });
+
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          console.error("Server JSON error:", errorData);
+          Alert.alert("Error", errorData.detail || "Failed to update profile");
+        } else {
+          const errorText = await response.text();
+          console.error("Server text error:", errorText);
+          Alert.alert("Error", errorText || "Failed to update profile");
+        }
+        return;
+      }
+
+      Alert.alert("Success", "Profile updated successfully!");
+      navigation.goBack();
+
+    } catch (error) {
+      console.error("Save failed", error);
+      Alert.alert("Error", "An error occurred while saving your profile.");
+    }
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Edit Religion Information</Text>
+    <ScrollView style={styles.container}>
+      <Text style={styles.title}>Edit Religious Details</Text>
 
-      <Text style={styles.label}>Religion</Text>
-      <View style={styles.picker}>
-        <Picker selectedValue={religion} onValueChange={setReligion}>
-          <Picker.Item label="Select Religion" value="" />
-          <Picker.Item label="Hindu" value="Hindu" />
-          <Picker.Item label="Muslim" value="Muslim" />
-          <Picker.Item label="Christian" value="Christian" />
-          <Picker.Item label="Sikh" value="Sikh" />
-          <Picker.Item label="Jain" value="Jain" />
-          <Picker.Item label="Other" value="Other" />
-        </Picker>
-      </View>
+      <TextInput
+        label="Religion"
+        value={religion}
+        onChangeText={setReligion}
+        mode="outlined"
+        style={styles.input}
+      />
+      <TextInput
+        label="Caste"
+        value={community}
+        onChangeText={setCommunity}
+        mode="outlined"
+        style={styles.input}
+      />
+      <TextInput
+        label="SubCaste"
+        value={subCaste}
+        onChangeText={setSubCaste}
+        mode="outlined"
+        style={styles.input}
+      />
+      <TextInput
+        label="Gothra"
+        value={gothra}
+        onChangeText={setGothra}
+        mode="outlined"
+        style={styles.input}
+      />
+      <TextInput
+        label="Dosha"
+        value={dosha}
+        onChangeText={setDosha}
+        mode="outlined"
+        style={styles.input}
+      />
+      <TextInput
+        label="Star"
+        value={star}
+        onChangeText={setStar}
+        mode="outlined"
+        style={styles.input}
+      />
+      <TextInput
+        label="Rassi"
+        value={rassi}
+        onChangeText={setRassi}
+        mode="outlined"
+        style={styles.input}
+      />
+      <TextInput
+        label="Horoscope"
+        value={horoscope}
+        onChangeText={setHoroscope}
+        mode="outlined"
+        style={styles.input}
+      />
 
-      <Text style={styles.label}>Caste</Text>
-      <View style={styles.picker}>
-        <Picker selectedValue={caste} onValueChange={setCaste}>
-          <Picker.Item label="Select Caste" value="" />
-          <Picker.Item label="Brahmin" value="Brahmin" />
-          <Picker.Item label="Kshatriya" value="Kshatriya" />
-          <Picker.Item label="Vaishya" value="Vaishya" />
-          <Picker.Item label="Shudra" value="Shudra" />
-          <Picker.Item label="Other" value="Other" />
-        </Picker>
-      </View>
-
-      <Text style={styles.label}>SubCaste</Text>
-      <View style={styles.picker}>
-        <Picker selectedValue={subCaste} onValueChange={setSubCaste}>
-          <Picker.Item label="Select SubCaste" value="" />
-          <Picker.Item label="Iyer" value="Iyer" />
-          <Picker.Item label="Iyengar" value="Iyengar" />
-          <Picker.Item label="Other" value="Other" />
-        </Picker>
-      </View>
-
-      <Text style={styles.label}>Gothra</Text>
-      <View style={styles.picker}>
-        <Picker selectedValue={gothra} onValueChange={setGothra}>
-          <Picker.Item label="Select Gothra" value="" />
-          <Picker.Item label="Kashyapa" value="Kashyapa" />
-          <Picker.Item label="Bharadwaj" value="Bharadwaj" />
-          <Picker.Item label="Vashishtha" value="Vashishtha" />
-          <Picker.Item label="Other" value="Other" />
-        </Picker>
-      </View>
-
-      <Text style={styles.label}>Dosha</Text>
-      <View style={styles.picker}>
-        <Picker selectedValue={dosha} onValueChange={setDosha}>
-          <Picker.Item label="Select Dosha" value="" />
-          <Picker.Item label="None" value="None" />
-          <Picker.Item label="Manglik" value="Manglik" />
-          <Picker.Item label="Kalasarpa" value="Kalasarpa" />
-          <Picker.Item label="Nadi" value="Nadi" />
-        </Picker>
-      </View>
-
-      <Text style={styles.label}>Star</Text>
-      <View style={styles.picker}>
-        <Picker selectedValue={star} onValueChange={setStar}>
-          <Picker.Item label="Select Star" value="" />
-          <Picker.Item label="Ashwini" value="Ashwini" />
-          <Picker.Item label="Bharani" value="Bharani" />
-          <Picker.Item label="Krittika" value="Krittika" />
-          <Picker.Item label="Rohini" value="Rohini" />
-          <Picker.Item label="Other" value="Other" />
-        </Picker>
-      </View>
-
-      <Text style={styles.label}>Rassi</Text>
-      <View style={styles.picker}>
-        <Picker selectedValue={rassi} onValueChange={setRassi}>
-          <Picker.Item label="Select Rassi" value="" />
-          <Picker.Item label="Aries" value="Aries" />
-          <Picker.Item label="Taurus" value="Taurus" />
-          <Picker.Item label="Gemini" value="Gemini" />
-          <Picker.Item label="Cancer" value="Cancer" />
-          <Picker.Item label="Other" value="Other" />
-        </Picker>
-      </View>
-
-      <Text style={styles.label}>Horoscope Match Required?</Text>
-      <View style={styles.picker}>
-        <Picker selectedValue={horoscope} onValueChange={setHoroscope}>
-          <Picker.Item label="Select Option" value="" />
-          <Picker.Item label="Yes" value="Yes" />
-          <Picker.Item label="No" value="No" />
-          <Picker.Item label="Doesn't Matter" value="Doesn't Matter" />
-        </Picker>
-      </View>
-
-      <TouchableOpacity style={styles.button} onPress={saveProfile}>
-        <Text style={styles.buttonText}>Save</Text>
-      </TouchableOpacity>
+      <Button mode="contained" onPress={saveProfile} style={styles.button}>
+        Save Changes
+      </Button>
     </ScrollView>
   );
 };
 
-export default EditReligionInfo;
+export default EditReligiousInfoScreen;
 
 const styles = StyleSheet.create({
   container: {
-    flexGrow: 1,
-    padding: 20,
-    backgroundColor: "#F2F0E8",
+    flex: 1,
+    padding: 16,
+    backgroundColor: "#fff",
   },
   title: {
     fontSize: 20,
+    marginBottom: 16,
     fontWeight: "bold",
-    color: "#1C170D",
-    marginBottom: 20,
+    textAlign: "center",
   },
-  label: {
-    fontSize: 16,
-    color: "#1C170D",
-    marginBottom: 5,
-  },
-  picker: {
-    backgroundColor: "#fff",
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    marginBottom: 15,
+  input: {
+    marginBottom: 12,
   },
   button: {
-    backgroundColor: "#9C854A",
-    paddingVertical: 14,
-    borderRadius: 8,
     marginTop: 20,
-    alignItems: "center",
-  },
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-    fontSize: 16,
+    padding: 6,
   },
 });

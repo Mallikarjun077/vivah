@@ -31,21 +31,56 @@ const ContactEdit = () => {
 
   const saveProfile = async () => {
     if (!mobile) {
-      Alert.alert("Validation", "Mobile number is required");
+      Alert.alert("Validation Error", "Mobile number is required.");
       return;
     }
 
-    const storedProfile = await AsyncStorage.getItem("userProfile");
-    const oldData = storedProfile ? JSON.parse(storedProfile) : {};
+    try {
+      const token = await AsyncStorage.getItem("token");
+      if (!token) {
+        Alert.alert("Auth Error", "User not authenticated.");
+        return;
+      }
 
-    const updatedProfile = {
-      ...oldData,
-      mobile,
-      socialMedia,
-    };
+      const updatedData = {
+        mobile,
+        socialMedia,
+      };
 
-    await AsyncStorage.setItem("userProfile", JSON.stringify(updatedProfile));
-    navigation.goBack();
+      const response = await fetch(
+        "https://backend-1-hccr.onrender.com/api/pre-profile/me",
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
+
+      if (response.ok) {
+        const result = await response.json();
+
+        // Update AsyncStorage
+        const storedProfile = await AsyncStorage.getItem("userProfile");
+        const oldData = storedProfile ? JSON.parse(storedProfile) : {};
+        const updatedProfile = {
+          ...oldData,
+          ...updatedData,
+        };
+        await AsyncStorage.setItem("userProfile", JSON.stringify(updatedProfile));
+
+        Alert.alert("Success", "Contact details updated.");
+        navigation.goBack();
+      } else {
+        const err = await response.json();
+        Alert.alert("Server error", err.detail || "Failed to update.");
+      }
+    } catch (error) {
+      console.error("Update failed", error);
+      Alert.alert("Network error", "Could not update profile.");
+    }
   };
 
   return (

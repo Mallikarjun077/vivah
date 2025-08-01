@@ -5,6 +5,8 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
+  TextInput,
+  Alert, // ✅ FIXED: Added missing import
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -15,7 +17,8 @@ const EditProfessionalInfo = () => {
 
   const [qualification, setQualification] = useState("");
   const [jobSector, setJobSector] = useState("");
-  const [annualIncome, setAnnualIncome] = useState("");
+  const [income, setIncome] = useState("");
+  const [profession, setProfession] = useState("");
 
   useEffect(() => {
     const loadProfile = async () => {
@@ -24,25 +27,56 @@ const EditProfessionalInfo = () => {
         const profile = JSON.parse(storedProfile);
         setQualification(profile.qualification || "");
         setJobSector(profile.jobSector || "");
-        setAnnualIncome(profile.annualIncome || "");
+        setIncome(profile.income || "");
+        setProfession(profile.profession || "");
       }
     };
     loadProfile();
   }, []);
 
   const saveProfile = async () => {
-    const storedProfile = await AsyncStorage.getItem("userProfile");
-    const oldProfile = storedProfile ? JSON.parse(storedProfile) : {};
-
     const updatedProfile = {
-      ...oldProfile,
       qualification,
       jobSector,
-      annualIncome,
+      income,
+      profession,
     };
 
-    await AsyncStorage.setItem("userProfile", JSON.stringify(updatedProfile));
-    navigation.goBack();
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const response = await fetch(
+        "https://backend-1-hccr.onrender.com/api/pre-profile/me", 
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updatedProfile),
+        }
+      );
+
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        if (contentType?.includes("application/json")) {
+          const errorData = await response.json();
+          console.error("Server error:", errorData);
+          Alert.alert("Error", errorData.detail || "Failed to update profile.");
+        } else {
+          const errorText = await response.text();
+          console.error("Raw error:", errorText);
+          Alert.alert("Error", errorText || "Failed to update profile.");
+        }
+        return;
+      }
+
+      Alert.alert("Success", "Professional information updated!");
+      navigation.goBack();
+    } catch (err) {
+      console.error("PUT request failed:", err);
+      Alert.alert("Error", "Network error. Please try again later.");
+    }
   };
 
   return (
@@ -76,7 +110,7 @@ const EditProfessionalInfo = () => {
 
       <Text style={styles.label}>Annual Income</Text>
       <View style={styles.picker}>
-        <Picker selectedValue={annualIncome} onValueChange={setAnnualIncome}>
+        <Picker selectedValue={income} onValueChange={setIncome}>
           <Picker.Item label="Select Annual Income" value="" />
           <Picker.Item label="Below ₹3 LPA" value="Below ₹3 LPA" />
           <Picker.Item label="₹3 LPA - ₹6 LPA" value="₹3-6 LPA" />
@@ -85,6 +119,14 @@ const EditProfessionalInfo = () => {
           <Picker.Item label="Above ₹20 LPA" value="Above ₹20 LPA" />
         </Picker>
       </View>
+
+      <Text style={styles.label}>Profession</Text>
+      <TextInput
+        style={styles.input}
+        value={profession}
+        onChangeText={setProfession}
+        placeholder="Enter your profession"
+      />
 
       <TouchableOpacity style={styles.button} onPress={saveProfile}>
         <Text style={styles.buttonText}>Save</Text>
@@ -118,6 +160,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     marginBottom: 15,
+  },
+  input: {
+    borderColor: "#ccc",
+    backgroundColor: "#E4DFD1",
+    padding: 10,
+    borderRadius: 8,
+    marginBottom: 10,
   },
   button: {
     backgroundColor: "#9C854A",

@@ -23,7 +23,7 @@ export default function PreProfileStep4() {
   const [form, setForm] = useState({
     qualification: "",
     jobSector: "",
-    annualIncome: "",
+    income: "",
     country: "",
     state: "",
     city: "",
@@ -114,7 +114,7 @@ const handleSubmit = async () => {
     ...restProfileData, // ✅ Only profile-related info
     qualification: form.qualification,
     job_sector: form.jobSector,
-    annual_income: form.annualIncome,
+    annual_income: form.income,
     country: form.country,
     state: form.state,
     city: form.city,

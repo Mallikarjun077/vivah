@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   StyleSheet,
   ScrollView,
+  Alert, // ✅ Added to fix the ReferenceError
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -38,11 +39,7 @@ const FamilyEdit = () => {
   }, []);
 
   const saveProfile = async () => {
-    const storedProfile = await AsyncStorage.getItem("userProfile");
-    const oldData = storedProfile ? JSON.parse(storedProfile) : {};
-
     const updatedProfile = {
-      ...oldData,
       familyStatus,
       familyType,
       fatherOccupation,
@@ -51,8 +48,41 @@ const FamilyEdit = () => {
       sisters,
     };
 
-    await AsyncStorage.setItem("userProfile", JSON.stringify(updatedProfile));
-    navigation.goBack();
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const response = await fetch(
+        "https://backend-1-hccr.onrender.com/api/pre-profile/me", 
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updatedProfile),
+        }
+      );
+
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        if (contentType?.includes("application/json")) {
+          const errorData = await response.json();
+          console.error("Server error:", errorData);
+          Alert.alert("Error", errorData.detail || "Failed to update profile.");
+        } else {
+          const errorText = await response.text();
+          console.error("Raw error:", errorText);
+          Alert.alert("Error", errorText || "Failed to update profile.");
+        }
+        return;
+      }
+
+      Alert.alert("Success", "Family information updated!");
+      navigation.goBack();
+    } catch (err) {
+      console.error("PUT request failed:", err);
+      Alert.alert("Error", "Network error. Please try again later.");
+    }
   };
 
   return (

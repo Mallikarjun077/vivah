@@ -6,6 +6,7 @@ import {
   ScrollView,
   TextInput,
   TouchableOpacity,
+  Alert, // ✅ Added for alerts
 } from "react-native";
 import { Picker } from "@react-native-picker/picker";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -34,19 +35,48 @@ const EditLocationInfo = () => {
   }, []);
 
   const saveProfile = async () => {
-    const storedProfile = await AsyncStorage.getItem("userProfile");
-    const oldProfile = storedProfile ? JSON.parse(storedProfile) : {};
-
     const updatedProfile = {
-      ...oldProfile,
       country,
       state,
       city,
       ancestralOrigin,
     };
 
-    await AsyncStorage.setItem("userProfile", JSON.stringify(updatedProfile));
-    navigation.goBack();
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const response = await fetch(
+        "https://backend-1-hccr.onrender.com/api/pre-profile/me", // 🔁 Replace with correct backend route
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updatedProfile),
+        }
+      );
+
+      if (!response.ok) {
+        const contentType = response.headers.get("content-type");
+        if (contentType?.includes("application/json")) {
+          const errorData = await response.json();
+          console.error("Server error:", errorData);
+          Alert.alert("Error", errorData.detail || "Failed to update location info.");
+        } else {
+          const errorText = await response.text();
+          console.error("Raw error:", errorText);
+          Alert.alert("Error", errorText || "Failed to update location info.");
+        }
+        return;
+      }
+
+      Alert.alert("Success", "Location information updated!");
+      navigation.goBack();
+    } catch (err) {
+      console.error("PUT request failed:", err);
+      Alert.alert("Error", "Network error. Please try again later.");
+    }
   };
 
   return (

@@ -41,27 +41,62 @@ const EditProfile = () => {
     };
     loadProfile();
   }, []);
-
-  const saveProfile = async () => {
-    try {
-      const stored = await AsyncStorage.getItem("userProfile");
-      const profile = stored ? JSON.parse(stored) : {};
-      const updated = {
-        ...profile,
-        age,
-        height,
-        maritalStatus,
-        eatingHabits,
-        motherTongue,
-        languagesKnown,
-        religion,
-      };
-      await AsyncStorage.setItem("userProfile", JSON.stringify(updated));
-      navigation.goBack();
-    } catch (error) {
-      console.error("Save failed", error);
+const saveProfile = async () => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+    if (!token) {
+      alert("You are not logged in.");
+      return;
     }
-  };
+
+    const updated = {
+     
+      age,
+      height,
+      maritalStatus,
+      eatingHabits,
+      motherTongue,
+      languagesKnown,
+    
+    };
+
+    const response = await fetch("https://backend-1-hccr.onrender.com/api/pre-profile/me", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(updated),
+    });
+
+    if (!response.ok) {
+      let errorMessage = "Unknown error";
+
+      try {
+        const errorData = await response.json();
+        errorMessage = errorData.detail || JSON.stringify(errorData);
+      } catch (jsonError) {
+        // If response is not JSON, fallback to plain text
+        const text = await response.text();
+        errorMessage = text;
+      }
+
+      console.error("Server error:", errorMessage);
+      alert("Failed to update profile: " + errorMessage);
+      return;
+    }
+
+    // Success
+    alert("Profile updated successfully!");
+    navigation.goBack();
+
+  } catch (error) {
+    console.error("Save failed", error);
+    alert("An error occurred while saving your profile.");
+  }
+};
+
+
 
   return (
     <ScrollView contentContainerStyle={styles.container}>

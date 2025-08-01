@@ -14,7 +14,6 @@ import {
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import { Ionicons } from "@expo/vector-icons";
-import { set } from "lodash";
 
 
 // const API_URL = "https://backend-1-hccr.onrender.com/api/profile/"; 
@@ -97,7 +96,7 @@ const ProfileScreen = () => {
   const [ancestralOrigin, setAncestralOrigin] = useState("");
   const [mobile, setMobile] = useState("");
   const [socialMedia, setSocialMedia] = useState("");
-    const [languagesKnown, setLanguagesKnown] = useState([]);
+  const [languagesKnown, setLanguagesKnown] = useState([]);
   
 
  useEffect(() => {
@@ -174,32 +173,119 @@ const ProfileScreen = () => {
 
 
 
- useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const token = await AsyncStorage.getItem("token");
+  const handleSelectPhoto = async () => {
+    let result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      base64: true,
+      quality: 0.7,
+    });
 
-        const response = await fetch("https://your-backend.com/api/pre-profile/me", {
-          method: "GET",
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
+    if (!result.canceled && result.assets && result.assets[0].base64) {
+      const newPhoto = {
+        uri: result.assets[0].uri,
+        base64: result.assets[0].base64,
+        id: Date.now().toString(),
+      };
 
-        if (!response.ok) throw new Error("Failed to fetch");
+      setPhotos((prevPhotos) => [...prevPhotos, newPhoto]);
+    } else {
+      Alert.alert("Image not selected or base64 missing");
+    }
+  };
 
-        const data = await response.json();
-        console.log("Photo (first 100 chars):", data.photo?.substring(0, 100));
-        setProfile(data);
-        
-      } catch (error) {
-        console.log("Failed to fetch profile:", error);
+
+
+  
+
+   const uploadPhotos = async () => {
+    try {
+      const token = await AsyncStorage.getItem("token");
+
+      const base64Photos = photos.map((photo) => photo.base64);
+
+      if (base64Photos.length === 0) {
+        // Alert.alert("No photos to upload");
+        return;
       }
-    };
 
-    fetchProfile();
-  }, []);
+      const response = await fetch("https://backend-1-hccr.onrender.com/api/pre-profile/me", {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          photos: base64Photos,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        Alert.alert("Success", "Photos uploaded successfully");
+      } else {
+        console.error("Server error:", data);
+        Alert.alert("Server error", JSON.stringify(data));
+      }
+    } catch (error) {
+      console.error("Upload failed:", error);
+      Alert.alert("Error", error.message || "Unknown error");
+    }
+  };
+
+//  useEffect(() => {
+//     const fetchProfile = async () => {
+//       try {
+//         const token = await AsyncStorage.getItem("token");
+
+//         const response = await fetch("https://backend-1-hccr.onrender.com/api/pre-profile/me", {
+//           method: "GET",
+//           headers: {
+//             Authorization: `Bearer ${token}`,
+//             "Content-Type": "application/json",
+//           },
+//         });
+
+//         if (!response.ok) throw new Error("Failed to fetch");
+
+//         const data = await response.json();
+//         console.log("Photo (first 100 chars):", data.photo?.substring(0, 100));
+//         setProfile(data);
+        
+//       } catch (error) {
+//         console.log("Failed to fetch profile:", error);
+//       }
+//     };
+
+//     fetchProfile();
+//   }, []);
+
+  const updateAbout = async () => {
+  try {
+    const token = await AsyncStorage.getItem("token");
+    const response = await fetch("https://backend-1-hccr.onrender.com/api/pre-profile/me", {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ about }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.text();
+      console.error("Update failed:", errorData);
+      Alert.alert("Update failed", "Please try again.");
+    } else {
+      Alert.alert("Updated", "About section updated successfully.");
+    }
+  } catch (error) {
+    console.error("Error updating:", error);
+    Alert.alert("Error", "Something went wrong.");
+  }
+};
+
 
 
   const pickImage = async () => {
@@ -266,39 +352,9 @@ const ProfileScreen = () => {
               name,
               surname,
               age,
-              dob,
-              height,
-              motherTongue,
-              languagesKnown,
-              maritalStatus,
-              eatingHabits,
-              religion,
               community,
-              subCaste,
-              gothra,
-              dosha,
-              star,
-              rassi,
-              horoscope,
-              profession,
-              qualification,
-              jobSector,
-              income,
-              familyStatus,
-              familyType,
-              fatherOccupation,
-              motherOccupation,
-              brothers,
-              sisters,
-              country,
-              state,
-              city,
-              ancestralOrigin,
-              mobile,
-              socialMedia,
-              about,
-              profile_photo: profilePhoto?.uri,
-              photos: photos.map((p) => p.uri),
+              
+              
             })
           }
         >
@@ -307,16 +363,24 @@ const ProfileScreen = () => {
 
         {/* <Text style={styles.head}>About</Text>
         <Text style={styles.head1}>{about}</Text> */}
-        <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>About</Text>
-          <TouchableOpacity onPress={() => setIsEditing(!isEditing)}>
-            <Ionicons
-              name={isEditing ? "checkmark-outline" : "create-outline"}
-              size={20}
-              color="#1C170D"
-            />
-          </TouchableOpacity>
-        </View>
+       <View style={styles.sectionRow}>
+  <Text style={styles.sectionTitle}>About</Text>
+  <TouchableOpacity
+    onPress={() => { 
+      if (isEditing) {
+        updateAbout(); // call update function on save
+      }
+      setIsEditing(!isEditing);
+    }}
+  >
+    <Ionicons
+      name={isEditing ? "checkmark-outline" : "create-outline"}
+      size={20}
+      color="#1C170D"
+    />
+  </TouchableOpacity>
+</View>
+
 
         {isEditing ? (
           <TextInput
@@ -355,57 +419,61 @@ const ProfileScreen = () => {
         )}
 
         <View style={styles.sectionRow}>
-          <Text style={styles.sectionTitle}>Add Photos</Text>
-        </View>
-        <FlatList
-          horizontal
-          data={[...photos, { id: "add_button", isAddButton: true }]}
+       <Text style={styles.sectionTitle}>Add Photos</Text>
+                <TouchableOpacity onPress={uploadPhotos}>
+          <Ionicons name="cloud-upload-outline" size={24} color="#1C170D" />
+        </TouchableOpacity>
 
-          renderItem={({ item, index }) => {
-  if (item.isAddButton) {
-    return (
-      <TouchableOpacity
-        style={styles.addPhotoButton}
-        onPress={() => pickImage(false)}
-      >
-        <Ionicons name="add" size={30} color="#9C854A" />
-      </TouchableOpacity>
-    );
-  }
+      </View>
 
-  return (
-    <View style={styles.photoItemWrapper}>
-      <TouchableOpacity onPress={() => setFullScreenPhotoUri(item.uri)}>
-        <Image source={{ uri: item.uri }} style={styles.photoItem} />
-      </TouchableOpacity>
-      <TouchableOpacity
-        style={styles.deleteIcon}
-        onPress={() => {
-          Alert.alert(
-            "Delete Photo",
-            "Are you sure you want to delete this photo?",
-            [
-              { text: "Cancel", style: "cancel" },
-              {
-                text: "Delete",
-                style: "destructive",
-                onPress: () => {
-                  setPhotos((prev) => prev.filter((_, i) => i !== index));
-                  if (fullScreenPhotoUri === item.uri) {
-                    setFullScreenPhotoUri(null);
-                  }
-                },
-              },
-            ]
+      <FlatList
+        horizontal
+        data={[...photos, { id: "add_button", isAddButton: true }]}
+        keyExtractor={(item, index) => item.id || index.toString()}
+        renderItem={({ item, index }) => {
+          if (item.isAddButton) {
+            return (
+              <TouchableOpacity
+                style={styles.addPhotoButton}
+                onPress={handleSelectPhoto}
+              >
+                <Ionicons name="add" size={30} color="#9C854A" />
+              </TouchableOpacity>
+            );
+          }
+
+          return (
+            <View style={styles.photoItemWrapper}>
+              <TouchableOpacity onPress={() => setFullScreenPhotoUri(item.uri)}>
+                <Image source={{ uri: item.uri }} style={styles.photoItem} />
+              </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.deleteIcon}
+                onPress={() => {
+                  Alert.alert("Delete Photo", "Are you sure?", [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Delete",
+                      style: "destructive",
+                      onPress: () => {
+                        setPhotos((prev) =>
+                          prev.filter((_, i) => i !== index)
+                        );
+                        if (fullScreenPhotoUri === item.uri) {
+                          setFullScreenPhotoUri(null);
+                        }
+                      },
+                    },
+                  ]);
+                }}
+              >
+                <Ionicons name="trash" size={22} color="#1C170D" />
+              </TouchableOpacity>
+            </View>
           );
         }}
-      >
-        <Ionicons name="trash" size={22} color="#1C170D" />
-      </TouchableOpacity>
-    </View>
-  );
-}}
-/>
+      />
+    
 
         {/* <Text style={styles.head}>Details</Text> */}
 
@@ -413,8 +481,16 @@ const ProfileScreen = () => {
           <Text style={styles.sectionTitle}>Personal Information</Text>
           <TouchableOpacity
             onPress={() =>
-              navigation.navigate("ProfileEdit", { section: "personal" })
-            }
+          
+              navigation.navigate("ProfileEdit",
+         dob,
+         age,
+        height,
+        eatingHabits,
+        motherTongue,
+        languagesKnown,
+
+                  )}
           >
             <Ionicons name="create-outline" size={18} color="#1C170D" />
           </TouchableOpacity>
@@ -474,7 +550,16 @@ const ProfileScreen = () => {
           <Text style={styles.sectionTitle}>Religion Information</Text>
           <TouchableOpacity
             onPress={() =>
-              navigation.navigate("ReligionEdit", { section: "personal" })
+              navigation.navigate("ReligionEdit", 
+                religion,
+                community,
+                subCaste,
+                gothra,
+                dosha,
+                rassi,
+                star,
+                horoscope
+              )
             }
           >
             <Ionicons name="create-outline" size={18} color="#1C170D" />
@@ -549,7 +634,12 @@ const ProfileScreen = () => {
           <Text style={styles.sectionTitle}>Professional Information</Text>
           <TouchableOpacity
             onPress={() =>
-              navigation.navigate("QualificationEdit", { section: "personal" })
+              navigation.navigate("QualificationEdit", 
+                qualification,
+                jobSector,
+                income,
+                profession
+              )
             }
           >
             <Ionicons name="create-outline" size={18} color="#1C170D" />
@@ -578,10 +668,10 @@ const ProfileScreen = () => {
             <Text style={styles.label}>Annual Income</Text>
             <Text style={styles.value}>{income}</Text>
           </View>
-          {/* <View style={styles.column}>
-                           <Text style={styles.label}>Eating Habits</Text>
-                           <Text style={styles.value}>{height}</Text>
-                         </View> */}
+          <View style={styles.column}>
+                           <Text style={styles.label}>Profession</Text>
+                           <Text style={styles.value}>{profession}</Text>
+                         </View>
         </View>
         <View style={styles.separatorContainer}>
           <View style={styles.line} />
@@ -593,7 +683,14 @@ const ProfileScreen = () => {
           <Text style={styles.sectionTitle}>Family Information</Text>
           <TouchableOpacity
             onPress={() =>
-              navigation.navigate("FamilyEdit", { section: "personal" })
+              navigation.navigate("FamilyEdit", 
+                familyStatus,
+                familyType,
+                fatherOccupation,
+                motherOccupation,
+                brothers,
+                sisters
+              )
             }
           >
             <Ionicons name="create-outline" size={18} color="#1C170D" />
@@ -654,7 +751,12 @@ const ProfileScreen = () => {
           <Text style={styles.sectionTitle}>Location</Text>
           <TouchableOpacity
             onPress={() =>
-              navigation.navigate("LocationEdit", { section: "personal" })
+              navigation.navigate("LocationEdit",
+                country,
+                state,
+                city,
+                ancestralOrigin
+              )
             }
           >
             <Ionicons name="create-outline" size={18} color="#1C170D" />
@@ -697,7 +799,10 @@ const ProfileScreen = () => {
           <Text style={styles.sectionTitle}>Contact Information</Text>
           <TouchableOpacity
             onPress={() =>
-              navigation.navigate("ContactEdit", { section: "personal" })
+              navigation.navigate("ContactEdit", 
+                mobile,
+                socialMedia
+              )
             }
           >
             <Ionicons name="create-outline" size={18} color="#1C170D" />
