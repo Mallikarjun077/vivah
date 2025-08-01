@@ -17,9 +17,7 @@ import QulificationEdit from "../screens/QulificationEdit";
 import FamilyEdit from "../screens/FamilyEdit";
 import LocationEdit from "../screens/LocationEdit";
 import PartnersDetails from "../screens/PartnersDetails";
-import Information from "../User_details/Information";
-import EducationDetails from "../User_details/EductionalDetails";
-import PersonalDetails from "../User_details/PersonalDetails";
+
 import Notification from "../Menu/Notification";
 import ContactEdit from "../screens/ContactEdit";
 import OtpResetScreen from "../authentication/OtpResetScreen";
@@ -149,7 +147,7 @@ export default function AppNavigator() {
           },
         }}
       />
-      <Stack.Screen
+      {/* <Stack.Screen
         name="PersonalDetails"
         component={PersonalDetails}
         options={{
@@ -160,9 +158,9 @@ export default function AppNavigator() {
             backgroundColor: "#F2F0E8",
           },
         }}
-      />
+      /> */}
 
-      <Stack.Screen
+      {/* <Stack.Screen
         name="UserDetails"
         component={Information}
         options={{
@@ -172,9 +170,9 @@ export default function AppNavigator() {
             backgroundColor: "#F2F0E8",
           },
         }}
-      />
+      /> */}
 
-      <Stack.Screen
+      {/* <Stack.Screen
         name="EduDetails"
         component={EducationDetails}
         options={{
@@ -185,7 +183,7 @@ export default function AppNavigator() {
             backgroundColor: "#F2F0E8",
           },
         }}
-      />
+      /> */}
 
       <Stack.Screen
         name="Matches"
